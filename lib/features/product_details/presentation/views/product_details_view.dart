@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_task/core/constants/app_strings.dart';
 import 'package:flutter_task/core/utilities/enums/request_status_enum.dart';
 import 'package:flutter_task/core/utilities/extensions/context_extension.dart';
 import 'package:flutter_task/features/product_details/presentation/cubit/product_details_cubit.dart';
@@ -38,13 +39,12 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
         }
       },
       child: Scaffold(
-        body: BlocBuilder<ProductDetailsCubit, ProductDetailsState>(
-          builder: (context, state) {
-            switch (state.status) {
-              case RequestStatusEnum.loading:
+        body: SafeArea(
+          child: BlocBuilder<ProductDetailsCubit, ProductDetailsState>(
+            builder: (context, state) {
+              if (state.status.isLoading) {
                 return const ProductDetailsLoading();
-              case RequestStatusEnum.success:
-              case RequestStatusEnum.loadedMore:
+              } else if (state.status == RequestStatusEnum.success) {
                 if (state.productDetails != null) {
                   return ProductDetailsContent(
                     productDetails: state.productDetails!,
@@ -53,16 +53,16 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                   );
                 }
                 return const ProductDetailsError(
-                  message: 'Product details not found',
+                  message: AppStrings.productNotFound,
                 );
-              case RequestStatusEnum.failure:
+              } else if (state.status == RequestStatusEnum.failure) {
                 return ProductDetailsError(
-                  message: state.errorMessage ?? 'Failed to load product details',
+                  message: state.errorMessage ?? AppStrings.failedToLoadProduct,
                 );
-              case RequestStatusEnum.initial:
-                return const ProductDetailsLoading();
-            }
-          },
+              }
+              return const ProductDetailsLoading();
+            },
+          ),
         ),
       ),
     );

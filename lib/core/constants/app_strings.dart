@@ -46,4 +46,14 @@ class AppStrings {
   static const String useOffLineData = 'Using offline data';
 
   static const String offlineMode = 'Offline Mode';
+
+  // Product Details
+  static const String productDetails = 'Product Details';
+  static const String description = 'Description';
+  static const String addToCart = 'Add to Cart';
+  static const String addToCartComingSoon = 'Add to cart feature coming soon!';
+  static const String productNotFound = 'Product details not found';
+  static const String failedToLoadProduct = 'Failed to load product details';
+  static const String goBack = 'Go Back';
+  static const String reviews = 'reviews';
 }

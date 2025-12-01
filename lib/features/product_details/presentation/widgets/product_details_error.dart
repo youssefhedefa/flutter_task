@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_task/core/constants/app_strings.dart';
+import 'package:flutter_task/core/utilities/extensions/context_extension.dart';
 
 class ProductDetailsError extends StatelessWidget {
   final String message;
@@ -21,22 +23,23 @@ class ProductDetailsError extends StatelessWidget {
               Icon(
                 Icons.error_outline,
                 size: 80,
-                color: Colors.red[300],
+                color: context.appColors.primaryColor.withAlpha(153),
               ),
               const SizedBox(height: 24),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.black87,
-                ),
+                style: context.appTextStyles.font16SemiBold,
               ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: () => Navigator.of(context).pop(),
                 icon: const Icon(Icons.arrow_back),
-                label: const Text('Go Back'),
+                label: Text(AppStrings.goBack),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: context.appColors.primaryColor,
+                  foregroundColor: context.appColors.buttonTextColor,
+                ),
               ),
             ],
           ),

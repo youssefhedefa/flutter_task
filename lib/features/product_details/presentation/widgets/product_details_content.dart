@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_task/core/constants/app_strings.dart';
+import 'package:flutter_task/core/utilities/extensions/context_extension.dart';
+import 'package:flutter_task/core/utilities/extensions/num_extension.dart';
 import 'package:flutter_task/features/product_details/domain/entities/product_details_entity.dart';
 import 'package:flutter_task/features/product_details/presentation/cubit/product_details_cubit.dart';
 import 'package:flutter_task/features/product_details/presentation/widgets/product_image_carousel.dart';
@@ -21,7 +24,6 @@ class ProductDetailsContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomScrollView(
       slivers: [
-        // App Bar with wishlist button
         SliverAppBar(
           expandedHeight: 400,
           pinned: true,
@@ -40,11 +42,11 @@ class ProductDetailsContent extends StatelessWidget {
                 },
                 icon: Icon(
                   isInWishlist ? Icons.favorite : Icons.favorite_border,
-                  color: isInWishlist ? Colors.red : Colors.white,
+                  color: isInWishlist ? context.appColors.primaryColor : Colors.white,
                   size: 28,
                 ),
                 style: IconButton.styleFrom(
-                  backgroundColor: Colors.black.withOpacity(0.3),
+                  backgroundColor: Colors.black.withAlpha(76),
                 ),
               ),
             ),
@@ -70,93 +72,53 @@ class ProductDetailsContent extends StatelessWidget {
                   ),
                   child: Text(
                     productDetails.category.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: context.appTextStyles.font12Regular.copyWith(
                       fontWeight: FontWeight.w600,
                       color: Colors.blue[700],
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                12.verticalSpace,
 
                 // Title
                 Text(
                   productDetails.title,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    height: 1.3,
-                  ),
+                  style: context.appTextStyles.font24SemiBold,
                 ),
-                const SizedBox(height: 12),
+                12.verticalSpace,
 
                 // Rating
                 ProductRatingWidget(
                   rating: productDetails.rating,
                   ratingCount: productDetails.ratingCount,
                 ),
-                const SizedBox(height: 16),
+                16.verticalSpace,
 
                 // Price
                 Text(
                   '\$${productDetails.price.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
+                  style: context.appTextStyles.font34Bold.copyWith(
+                    color: context.appColors.successColor,
                   ),
                 ),
-                const SizedBox(height: 24),
+                24.verticalSpace,
 
                 // Description Section
-                const Text(
-                  'Description',
-                  style: TextStyle(
+                Text(
+                  AppStrings.description,
+                  style: context.appTextStyles.font16SemiBold.copyWith(
                     fontSize: 18,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 12),
+                12.verticalSpace,
                 Text(
                   productDetails.description,
-                  style: TextStyle(
-                    fontSize: 15,
+                  style: context.appTextStyles.font14Regular.copyWith(
                     height: 1.6,
-                    color: Colors.grey[700],
+                    color: context.appColors.thirdColor,
                   ),
                 ),
-                const SizedBox(height: 32),
-
-                // Add to Cart Button (optional - can be implemented later)
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // TODO: Implement add to cart
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Add to cart feature coming soon!'),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Add to Cart',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
+                32.verticalSpace,
               ],
             ),
           ),
@@ -165,4 +127,3 @@ class ProductDetailsContent extends StatelessWidget {
     );
   }
 }
-
