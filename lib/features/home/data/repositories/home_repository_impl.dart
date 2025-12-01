@@ -1,5 +1,4 @@
 import 'package:flutter_task/core/networking/local/hive_service.dart';
-import 'package:flutter_task/core/networking/local/hive_service.dart';
 import 'package:flutter_task/core/networking/remote/api_result.dart';
 import 'package:flutter_task/core/networking/remote/api_routes.dart';
 import 'package:flutter_task/core/networking/remote/api_service.dart';
@@ -81,7 +80,6 @@ class HomeRepositoryImpl extends BaseRepository implements HomeRepository {
                     id: model.id,
                     title: model.title,
                     price: model.price,
-                    description: model.description,
                     category: model.category,
                     image: model.image,
                     rating: model.rating.rate,

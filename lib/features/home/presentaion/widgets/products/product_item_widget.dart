@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_task/core/utilities/extensions/context_extension.dart';
+import 'package:flutter_task/core/utilities/extensions/num_extension.dart';
 import 'package:flutter_task/core/widgets/custom_cached_network_image.dart';
 import 'package:flutter_task/features/home/domain/entities/product_entity.dart';
 import 'package:flutter_task/features/home/presentaion/cubit/home_cubit.dart';
@@ -16,12 +17,6 @@ class ProductItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    // Calculate responsive sizes
-    final cardPadding = screenWidth * 0.03;
-
     return BlocBuilder<HomeCubit, HomeState>(
       builder: (context, state) {
         final isInWishlist = state.wishlistIds.contains(product.id);
@@ -35,17 +30,14 @@ class ProductItemWidget extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Product Image
               product.image.isNotEmpty
                   ? AspectRatio(
-                      aspectRatio: 1,
+                      aspectRatio: 0.95,
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: CustomCachedNetworkImageWidget(
                           imageUrl: product.image,
-                          hasLoading: true,
                         ),
                       ),
                     )
@@ -61,73 +53,60 @@ class ProductItemWidget extends StatelessWidget {
                       ),
                     ),
               Padding(
-                padding: EdgeInsets.all(cardPadding),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Title
                     Text(
                       product.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.035,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: context.appTextStyles.font16SemiBold,
                     ),
-                    SizedBox(height: screenHeight * 0.001),
-                    // Category
+                    4.verticalSpace,
                     Text(
                       product.category,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.03,
-                        color: Colors.grey[600],
-                      ),
+                      style: context.appTextStyles.font12RegularThird,
                     ),
-                    SizedBox(height: screenHeight * 0.002),
-                    // Rating
+                    8.verticalSpace,
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.star,
-                          size: screenWidth * 0.04,
+                          size: 18,
                           color: Colors.amber,
                         ),
-                        SizedBox(width: screenWidth * 0.01),
+                        4.horizontalSpace,
                         Text(
                           '${product.rating.toStringAsFixed(1)} (${product.ratingCount})',
-                          style: TextStyle(
-                            fontSize: screenWidth * 0.03,
-                          ),
+                          style: context.appTextStyles.font10RegularThird,
                         ),
                       ],
                     ),
-                    SizedBox(height: screenHeight * 0.001),
+                    4.verticalSpace,
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           '\$${product.price.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontSize: screenWidth * 0.04,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).primaryColor,
-                          ),
+                          style: context.appTextStyles.font14Regular,
                         ),
-                        IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          icon: Icon(
+                        InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Icon(
                             isInWishlist ? Icons.favorite : Icons.favorite_border,
                             color: isInWishlist
                                 ? context.appColors.primaryColor
                                 : context.appColors.thirdColor,
                             size: 22,
                           ),
-                          onPressed: () {
+                          onTap: () {
                             context.read<HomeCubit>().toggleWishlist(product.id);
                           },
                         ),

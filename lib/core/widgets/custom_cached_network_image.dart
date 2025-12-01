@@ -11,12 +11,10 @@ class CustomCachedNetworkImageWidget extends StatelessWidget {
     this.placeholder,
     this.height,
     this.width,
-    this.hasLoading = true,
   });
 
   final String imageUrl;
   final String? placeholder;
-  final bool hasLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -24,10 +22,9 @@ class CustomCachedNetworkImageWidget extends StatelessWidget {
       imageUrl: imageUrl,
       height: height,
       width: width,
-      fit: BoxFit.fill,
-      imageBuilder: (context, imageProvider) => Container(
+      imageBuilder: (context, imageProvider) => DecoratedBox(
         decoration: BoxDecoration(
-          image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
+          image: DecorationImage(image: imageProvider, fit: BoxFit.fill),
         ),
       ),
       placeholder: (context, url) =>
