@@ -9,4 +9,5 @@ class ApiRoutes {
   static const String categories = '$_productsSegment/categories';
   static const String products = _productsSegment;
   static String productsByCategory(String category) => '$_productsSegment/category/$category';
+  static String productDetails(int id) => '$_productsSegment/$id';
 }

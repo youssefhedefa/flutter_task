@@ -5,6 +5,8 @@ import 'package:flutter_task/core/routing/routing_constants.dart';
 import 'package:flutter_task/core/utilities/service_locator.dart';
 import 'package:flutter_task/features/auth/presentation/views/login_view.dart';
 import 'package:flutter_task/features/main_navigation/presentation/views/main_navigation_view.dart';
+import 'package:flutter_task/features/product_details/presentation/cubit/product_details_cubit.dart';
+import 'package:flutter_task/features/product_details/presentation/views/product_details_view.dart';
 import 'package:flutter_task/features/splash/presentation/cubit/splash_cubit.dart';
 import 'package:flutter_task/features/splash/presentation/views/splash_view.dart';
 
@@ -38,11 +40,11 @@ class AppRoutingManager {
           settings: settings,
         );
       case AppRoutingConstants.productDetails:
+        final productId = settings.arguments as int;
         return CustomPageRoute(
-          child: const Scaffold(
-            body: Center(
-              child: Text('Product Details View'),
-            ),
+          child: BlocProvider(
+            create: (context) => getIt<ProductDetailsCubit>(),
+            child: ProductDetailsView(productId: productId),
           ),
           settings: settings,
         );
@@ -51,15 +53,6 @@ class AppRoutingManager {
           child: const Scaffold(
             body: Center(
               child: Text('Search View'),
-            ),
-          ),
-          settings: settings,
-        );
-      case AppRoutingConstants.wishingList:
-        return CustomPageRoute(
-          child: const Scaffold(
-            body: Center(
-              child: Text('Wishing List View'),
             ),
           ),
           settings: settings,

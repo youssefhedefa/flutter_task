@@ -12,6 +12,11 @@ import 'package:flutter_task/features/home/domain/repositories/home_repository.d
 import 'package:flutter_task/features/home/domain/usecases/get_categories_usecase.dart';
 import 'package:flutter_task/features/home/domain/usecases/get_products_usecase.dart';
 import 'package:flutter_task/features/home/presentaion/cubit/home_cubit.dart';
+import 'package:flutter_task/features/product_details/data/datasources/product_details_remote_data_source.dart';
+import 'package:flutter_task/features/product_details/data/repositories/product_details_repository_impl.dart';
+import 'package:flutter_task/features/product_details/domain/repositories/product_details_repository.dart';
+import 'package:flutter_task/features/product_details/domain/usecases/get_product_details_usecase.dart';
+import 'package:flutter_task/features/product_details/presentation/cubit/product_details_cubit.dart';
 import 'package:flutter_task/features/splash/domain/usecases/check_auth_usecase.dart';
 import 'package:flutter_task/features/splash/presentation/cubit/splash_cubit.dart';
 import 'package:flutter_task/features/wishlist/data/repositories/wishlist_repository_impl.dart';
@@ -105,6 +110,33 @@ initServiceLocator() {
     () => HomeCubit(
       getCategoriesUseCase: getIt(),
       getProductsUseCase: getIt(),
+    ),
+  );
+
+  // Product Details Data Sources
+  getIt.registerLazySingleton<ProductDetailsRemoteDataSource>(
+    () => ProductDetailsRemoteDataSourceImpl(apiService: getIt()),
+  );
+
+  // Product Details Repository
+  getIt.registerLazySingleton<ProductDetailsRepository>(
+    () => ProductDetailsRepositoryImpl(
+      remoteDataSource: getIt(),
+    ),
+  );
+
+  // Product Details Use Cases
+  getIt.registerLazySingleton<GetProductDetailsUseCase>(
+    () => GetProductDetailsUseCase(repository: getIt()),
+  );
+
+  // Product Details Cubit
+  getIt.registerFactory<ProductDetailsCubit>(
+    () => ProductDetailsCubit(
+      getProductDetailsUseCase: getIt(),
+      toggleWishlistUseCase: getIt(),
+      checkProductInWishlistUseCase: getIt(),
+      getWishlistIdsUseCase: getIt(),
     ),
   );
 
