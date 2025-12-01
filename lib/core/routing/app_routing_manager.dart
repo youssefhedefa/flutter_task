@@ -4,6 +4,7 @@ import 'package:flutter_task/core/routing/custom_page_route.dart';
 import 'package:flutter_task/core/routing/routing_constants.dart';
 import 'package:flutter_task/core/utilities/service_locator.dart';
 import 'package:flutter_task/features/auth/presentation/views/login_view.dart';
+import 'package:flutter_task/features/main_navigation/presentation/views/main_navigation_view.dart';
 import 'package:flutter_task/features/splash/presentation/cubit/splash_cubit.dart';
 import 'package:flutter_task/features/splash/presentation/views/splash_view.dart';
 
@@ -31,13 +32,9 @@ class AppRoutingManager {
           child: const LoginView(),
           settings: settings,
         );
-      case AppRoutingConstants.home:
+      case AppRoutingConstants.mainNavigation:
         return CustomPageRoute(
-          child: const Scaffold(
-            body: Center(
-              child: Text('Home View'),
-            ),
-          ),
+          child: const MainNavigationView(),
           settings: settings,
         );
       case AppRoutingConstants.productDetails:

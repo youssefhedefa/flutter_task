@@ -13,7 +13,7 @@ class SplashView extends StatelessWidget {
     return BlocListener<SplashCubit, SplashState>(
       listener: (context, state) {
         if (state.status == SplashStatus.authenticated) {
-          Navigator.of(context).pushReplacementNamed(AppRoutingConstants.home);
+          Navigator.of(context).pushReplacementNamed(AppRoutingConstants.mainNavigation);
         } else if (state.status == SplashStatus.unauthenticated) {
           Navigator.of(context).pushReplacementNamed(AppRoutingConstants.login);
         }

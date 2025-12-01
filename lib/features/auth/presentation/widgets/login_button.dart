@@ -26,7 +26,7 @@ class LoginButton extends StatelessWidget {
       listener: (context, state) {
         if (state.status.isSuccess) {
           context.showSuccessSnackBar(AppStrings.loginSuccess);
-          context.pushNamedAndRemoveUntil(AppRoutingConstants.home);
+          context.pushNamedAndRemoveUntil(AppRoutingConstants.mainNavigation);
         } else if (state.status.isFailure) {
           context.showErrorSnackBar(state.errorMessage ?? AppStrings.loginError);
         }
