@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_task/core/routing/custom_page_route.dart';
 import 'package:flutter_task/core/routing/routing_constants.dart';
+import 'package:flutter_task/features/auth/presentation/views/login_view.dart';
 
 class AppRoutingManager {
   AppRoutingManager._privateConstructor();
@@ -13,13 +14,9 @@ class AppRoutingManager {
 
   Route? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
-      case AppRoutingConstants.auth:
+      case AppRoutingConstants.login:
         return CustomPageRoute(
-          child: const Scaffold(
-            body: Center(
-              child: Text('Auth View'),
-            ),
-          ),
+          child: const LoginView(),
           settings: settings,
         );
       case AppRoutingConstants.home:
