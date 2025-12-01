@@ -8,19 +8,8 @@ import 'package:flutter_task/features/home/presentaion/cubit/home_cubit.dart';
 import 'package:flutter_task/features/home/presentaion/cubit/home_state.dart';
 import 'package:flutter_task/features/home/presentaion/widgets/categories_tap_bar/category_filter_tap_bar_item.dart';
 
-class CategoryFilterTabBar extends StatefulWidget {
+class CategoryFilterTabBar extends StatelessWidget {
   const CategoryFilterTabBar({super.key});
-
-  @override
-  State<CategoryFilterTabBar> createState() => _CategoryFilterTabBarState();
-}
-
-class _CategoryFilterTabBarState extends State<CategoryFilterTabBar> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<HomeCubit>().init();
-  }
 
   @override
   Widget build(BuildContext context) {

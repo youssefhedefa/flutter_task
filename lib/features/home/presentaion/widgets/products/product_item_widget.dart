@@ -33,7 +33,7 @@ class ProductItemWidget extends StatelessWidget {
             children: [
               product.image.isNotEmpty
                   ? AspectRatio(
-                      aspectRatio: 0.95,
+                      aspectRatio: 1,
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: CustomCachedNetworkImageWidget(

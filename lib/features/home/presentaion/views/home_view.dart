@@ -52,7 +52,6 @@ class HomeView extends StatelessWidget {
           body: Builder(
             builder: (context) {
               return Column(
-                spacing: 16,
                 children: [
                   const CategoryFilterTabBar(),
                   Expanded(

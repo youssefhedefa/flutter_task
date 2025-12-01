@@ -8,8 +8,16 @@ class GetProductsUseCase {
   GetProductsUseCase({required HomeRepository repository})
       : _repository = repository;
 
-  Future<ApiResult<List<ProductEntity>>> execute({String? category}) async {
-    return await _repository.getProducts(category: category);
+  Future<ApiResult<List<ProductEntity>>> execute({
+    String? category,
+    int? limit,
+    int? skip,
+  }) async {
+    return await _repository.getProducts(
+      category: category,
+      limit: limit,
+      skip: skip,
+    );
   }
 }
 

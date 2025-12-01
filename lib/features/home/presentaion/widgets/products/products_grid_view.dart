@@ -5,7 +5,9 @@ import 'package:flutter_task/core/utilities/extensions/widget_extension.dart';
 import 'package:flutter_task/features/home/domain/entities/product_entity.dart';
 import 'package:flutter_task/features/home/presentaion/cubit/home_cubit.dart';
 import 'package:flutter_task/features/home/presentaion/cubit/home_state.dart';
+import 'package:flutter_task/features/home/presentaion/widgets/products/empty_products_widget.dart';
 import 'package:flutter_task/features/home/presentaion/widgets/products/product_item_widget.dart';
+import 'package:flutter_task/features/home/presentaion/widgets/products/products_error_widget.dart';
 
 class ProductsGridView extends StatefulWidget {
   const ProductsGridView({super.key});
@@ -26,6 +28,7 @@ class _ProductsGridViewState extends State<ProductsGridView> {
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
@@ -47,93 +50,25 @@ class _ProductsGridViewState extends State<ProductsGridView> {
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
       builder: (context, state) {
-        if (state.productsStatus == RequestStatusEnum.loading &&
+        if ((state.productsStatus.isLoading || state.productsStatus.isInitial) &&
             state.products.isEmpty) {
           return _buildSkeletonGrid();
         }
 
-        if (state.productsStatus == RequestStatusEnum.failure &&
-            state.products.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: Colors.red,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  state.errorMessage ?? 'Failed to load products',
-                  style: const TextStyle(fontSize: 16),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    context.read<HomeCubit>().fetchProducts();
-                  },
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
+        if (state.productsStatus.isFailure && state.products.isEmpty) {
+          return ProductsErrorWidget(
+            errorMessage: state.errorMessage,
+            onRetry: () => context.read<HomeCubit>().fetchProducts(),
           );
         }
 
         if (state.products.isEmpty) {
-          return const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.shopping_bag_outlined,
-                  size: 64,
-                  color: Colors.grey,
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'No products found',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ],
-            ),
-          );
+          return const EmptyProductsWidget();
         }
 
-        final displayedProducts = state.displayedProducts;
-        final hasMore = state.hasMoreProducts;
-
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: GridView.builder(
-            controller: _scrollController,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.575,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-            ),
-            itemCount: displayedProducts.length + (hasMore && state.isLoadingMore ? 2 : 0),
-            itemBuilder: (context, index) {
-              if (index < displayedProducts.length) {
-                return ProductItemWidget(product: displayedProducts[index]);
-              } else {
-                // Show loading skeleton for next items
-                return const ProductItemWidget(
-                  product: ProductEntity(
-                    id: 0,
-                    title: 'Loading Product Title Here',
-                    price: 99.99,
-                    category: 'Loading Category',
-                    image: '',
-                    rating: 4.5,
-                    ratingCount: 100,
-                  ),
-                );
-              }
-            },
-          ),
+        return _buildGridView(
+          products: state.products,
+          isLoadingMore: state.isLoadingMore,
         );
       },
     );
@@ -153,52 +88,40 @@ class _ProductsGridViewState extends State<ProductsGridView> {
       ),
     );
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.68,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-        ),
-        itemCount: dummyProducts.length,
-        itemBuilder: (context, index) {
-          return ProductItemWidget(product: dummyProducts[index]).loading();
-        },
-      ),
+    return _buildGridView(
+      isLoading: true,
+      products: dummyProducts,
     );
   }
 
-  Widget _buildLoadingMoreIndicator() {
-    // Create dummy products for loading more skeleton
-    final dummyProducts = List.generate(
-      2,
-      (index) => const ProductEntity(
-        id: 0,
-        title: 'Loading Product Title Here',
-        price: 99.99,
-        category: 'Loading Category',
-        image: '',
-        rating: 4.5,
-        ratingCount: 100,
-      ),
-    );
-
-    return SizedBox(
-      height: 280,
-      child: Row(
-        children: [
-          Expanded(
-            child: ProductItemWidget(product: dummyProducts[0]).loading(),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: ProductItemWidget(product: dummyProducts[1]).loading(),
-          ),
-        ],
+  Widget _buildGridView({
+    bool isLoading = false,
+    bool isLoadingMore = false,
+    required List<ProductEntity> products,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: GridView.builder(
+        controller: _scrollController,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.6,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+        ),
+        itemCount: isLoadingMore ? products.length + 2 : products.length,
+        itemBuilder: (context, index) {
+          if (index >= products.length) {
+            return ProductItemWidget(
+              product: products[0],
+            ).loading(isLoading: true);
+          }
+          return ProductItemWidget(
+            product: products[index],
+          ).loading(
+            isLoading: isLoading,
+          );
+        },
       ),
     );
   }

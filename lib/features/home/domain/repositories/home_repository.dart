@@ -5,6 +5,10 @@ import 'package:flutter_task/features/home/domain/entities/product_entity.dart';
 
 abstract class HomeRepository {
   Future<ApiResult<CachedData<List<CategoryEntity>>>> getCategories({bool forceRefresh = false});
-  Future<ApiResult<List<ProductEntity>>> getProducts({String? category});
+  Future<ApiResult<List<ProductEntity>>> getProducts({
+    String? category,
+    int? limit,
+    int? skip,
+  });
 }
 

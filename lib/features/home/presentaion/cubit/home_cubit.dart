@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_task/core/constants/app_strings.dart';
 import 'package:flutter_task/core/networking/local/wishlist_service.dart';
 import 'package:flutter_task/core/utilities/enums/request_status_enum.dart';
-import 'package:flutter_task/features/home/domain/entities/category_entity.dart';
 import 'package:flutter_task/features/home/domain/usecases/get_categories_usecase.dart';
 import 'package:flutter_task/features/home/domain/usecases/get_products_usecase.dart';
 import 'package:flutter_task/features/home/presentaion/cubit/home_state.dart';
@@ -13,9 +13,9 @@ class HomeCubit extends Cubit<HomeState> {
   HomeCubit({
     required GetCategoriesUseCase getCategoriesUseCase,
     required GetProductsUseCase getProductsUseCase,
-  })  : _getCategoriesUseCase = getCategoriesUseCase,
-        _getProductsUseCase = getProductsUseCase,
-        super(const HomeState());
+  }) : _getCategoriesUseCase = getCategoriesUseCase,
+       _getProductsUseCase = getProductsUseCase,
+       super(const HomeState());
 
   Future<void> init() async {
     await fetchCategories();
@@ -24,58 +24,76 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> fetchCategories({bool forceRefresh = false}) async {
-    emit(state.copyWith(categoryStatus: RequestStatusEnum.loading));
+    emit(
+      state.copyWith(
+        categoryStatus: RequestStatusEnum.loading,
+        productsStatus: RequestStatusEnum.loading,
+      ),
+    );
 
     final result = await _getCategoriesUseCase.execute(forceRefresh: forceRefresh);
 
     result.when(
       success: (cachedData) {
-        final allCategories = [
-          const CategoryEntity(name: 'all'),
-          ...cachedData.data,
-        ];
-
-        emit(state.copyWith(
-          categoryStatus: RequestStatusEnum.success,
-          categories: allCategories,
-          selectedCategory: state.selectedCategory.isEmpty ? 'all' : state.selectedCategory,
-          isFromCache: cachedData.isFromCache,
-          errorMessage: cachedData.isFromCache ? 'Using offline data' : null,
-        ));
+        emit(
+          state.copyWith(
+            categoryStatus: RequestStatusEnum.success,
+            categories: cachedData.data,
+            selectedCategory: state.selectedCategory.isEmpty
+                ? AppStrings.all
+                : state.selectedCategory,
+            isFromCache: cachedData.isFromCache,
+            errorMessage: cachedData.isFromCache ? 'Using offline data' : null,
+          ),
+        );
       },
       failure: (error) {
-        emit(state.copyWith(
-          categoryStatus: RequestStatusEnum.failure,
-          errorMessage: error.message,
-          isFromCache: false,
-        ));
+        emit(
+          state.copyWith(
+            categoryStatus: RequestStatusEnum.failure,
+            errorMessage: error.message,
+            isFromCache: false,
+          ),
+        );
       },
     );
   }
 
   Future<void> fetchProducts() async {
-    emit(state.copyWith(
-      productsStatus: RequestStatusEnum.loading,
-      displayedProductsCount: HomeState.productsPerPage, // Reset pagination
-    ));
+    emit(
+      state.copyWith(
+        productsStatus: RequestStatusEnum.loading,
+        currentPage: 1,
+        products: [],
+        hasMoreProducts: true,
+      ),
+    );
 
     final result = await _getProductsUseCase.execute(
       category: state.selectedCategory,
+      limit: HomeState.productsPerPage,
+      skip: 0,
     );
 
     result.when(
       success: (products) {
-        emit(state.copyWith(
-          productsStatus: RequestStatusEnum.success,
-          products: products,
-          displayedProductsCount: HomeState.productsPerPage,
-        ));
+        final hasMore = products.length == HomeState.productsPerPage;
+        emit(
+          state.copyWith(
+            productsStatus: RequestStatusEnum.success,
+            products: products,
+            currentPage: 1,
+            hasMoreProducts: hasMore,
+          ),
+        );
       },
       failure: (error) {
-        emit(state.copyWith(
-          productsStatus: RequestStatusEnum.failure,
-          errorMessage: error.message,
-        ));
+        emit(
+          state.copyWith(
+            productsStatus: RequestStatusEnum.failure,
+            errorMessage: error.message,
+          ),
+        );
       },
     );
   }
@@ -84,14 +102,37 @@ class HomeCubit extends Cubit<HomeState> {
     if (state.hasMoreProducts && !state.isLoadingMore) {
       emit(state.copyWith(isLoadingMore: true));
 
-      // Add small delay for better UX with skeleton
-      await Future.delayed(const Duration(milliseconds: 1000));
+      final nextPage = state.currentPage + 1;
+      final skip = state.currentPage * HomeState.productsPerPage;
 
-      final newCount = state.displayedProductsCount + HomeState.productsPerPage;
-      emit(state.copyWith(
-        displayedProductsCount: newCount,
-        isLoadingMore: false,
-      ));
+      final result = await _getProductsUseCase.execute(
+        category: state.selectedCategory,
+        limit: HomeState.productsPerPage,
+        skip: skip,
+      );
+
+      result.when(
+        success: (newProducts) {
+          final updatedProducts = [...state.products, ...newProducts];
+          final hasMore = newProducts.length == HomeState.productsPerPage;
+          emit(
+            state.copyWith(
+              products: updatedProducts,
+              currentPage: nextPage,
+              isLoadingMore: false,
+              hasMoreProducts: hasMore,
+            ),
+          );
+        },
+        failure: (error) {
+          emit(
+            state.copyWith(
+              isLoadingMore: false,
+              errorMessage: error.message,
+            ),
+          );
+        },
+      );
     }
   }
 
@@ -122,4 +163,3 @@ class HomeCubit extends Cubit<HomeState> {
     fetchCategories(forceRefresh: true);
   }
 }
-

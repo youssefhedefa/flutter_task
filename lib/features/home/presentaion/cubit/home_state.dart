@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:equatable/equatable.dart';
 import 'package:flutter_task/core/utilities/enums/request_status_enum.dart';
 import 'package:flutter_task/features/home/domain/entities/category_entity.dart';
 import 'package:flutter_task/features/home/domain/entities/product_entity.dart';
@@ -17,8 +16,9 @@ class HomeState extends Equatable {
   final Set<int> wishlistIds;
 
   // Pagination
-  final int displayedProductsCount;
   final bool isLoadingMore;
+  final bool hasMoreProducts;
+  final int currentPage;
   static const int productsPerPage = 8;
 
   const HomeState({
@@ -30,18 +30,10 @@ class HomeState extends Equatable {
     this.productsStatus = RequestStatusEnum.initial,
     this.products = const [],
     this.wishlistIds = const {},
-    this.displayedProductsCount = productsPerPage,
     this.isLoadingMore = false,
+    this.hasMoreProducts = true,
+    this.currentPage = 1,
   });
-
-  List<ProductEntity> get displayedProducts {
-    final count = displayedProductsCount > products.length
-        ? products.length
-        : displayedProductsCount;
-    return products.take(count).toList();
-  }
-
-  bool get hasMoreProducts => displayedProductsCount < products.length;
 
   HomeState copyWith({
     RequestStatusEnum? categoryStatus,
@@ -53,7 +45,8 @@ class HomeState extends Equatable {
     List<ProductEntity>? products,
     bool? isLoadingMore,
     Set<int>? wishlistIds,
-    int? displayedProductsCount,
+    bool? hasMoreProducts,
+    int? currentPage,
   }) {
     return HomeState(
       categoryStatus: categoryStatus ?? this.categoryStatus,
@@ -65,7 +58,8 @@ class HomeState extends Equatable {
       products: products ?? this.products,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       wishlistIds: wishlistIds ?? this.wishlistIds,
-      displayedProductsCount: displayedProductsCount ?? this.displayedProductsCount,
+      hasMoreProducts: hasMoreProducts ?? this.hasMoreProducts,
+      currentPage: currentPage ?? this.currentPage,
     );
   }
 
@@ -80,7 +74,8 @@ class HomeState extends Equatable {
         productsStatus,
         products,
         wishlistIds,
-        displayedProductsCount,
+        hasMoreProducts,
+        currentPage,
       ];
 }
 

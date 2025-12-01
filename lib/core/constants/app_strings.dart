@@ -37,5 +37,8 @@ class AppStrings {
   static const String home = 'Home';
   static const String wishlist = 'Wishlist';
 
+  // Categories
+  static const String all = 'all';
+
   static const String youAreInOfflineMode = 'You are in offline mode. Displayed data may be outdated.';
 }
