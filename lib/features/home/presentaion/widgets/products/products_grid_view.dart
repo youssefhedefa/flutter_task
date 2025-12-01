@@ -50,8 +50,7 @@ class _ProductsGridViewState extends State<ProductsGridView> {
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
       builder: (context, state) {
-        if ((state.productsStatus.isLoading || state.productsStatus.isInitial) &&
-            state.products.isEmpty) {
+        if ((state.productsStatus.isLoading || state.productsStatus.isInitial)) {
           return _buildSkeletonGrid();
         }
 

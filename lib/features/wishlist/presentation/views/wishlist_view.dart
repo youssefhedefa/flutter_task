@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_task/core/constants/app_strings.dart';
+import 'package:flutter_task/features/wishlist/presentation/widgets/wishlist_grid_view.dart';
 
 class WishlistView extends StatelessWidget {
   const WishlistView({super.key});
@@ -7,28 +9,10 @@ class WishlistView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Wishlist'),
+        title: const Text(AppStrings.wishlist),
         centerTitle: true,
       ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.favorite,
-              size: 80,
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Wishlist Page',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
+      body: const WishlistGridView(),
     );
   }
 }

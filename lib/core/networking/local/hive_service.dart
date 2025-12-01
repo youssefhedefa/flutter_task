@@ -3,6 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 class HiveService {
   static const String _categoriesBoxName = 'categories_box';
   static const String _productsBoxName = 'products_box';
+  static const String _wishlistBoxName = 'wishlist_box';
 
   // Initialize Hive
   static Future<void> init() async {
@@ -74,6 +75,98 @@ class HiveService {
   // Close all boxes
   static Future<void> closeAll() async {
     await Hive.close();
+  }
+
+  // ==================== Wishlist Methods ====================
+
+  // Get wishlist box
+  static Future<Box<dynamic>> getWishlistBox() async {
+    if (!Hive.isBoxOpen(_wishlistBoxName)) {
+      return await Hive.openBox(_wishlistBoxName);
+    }
+    return Hive.box(_wishlistBoxName);
+  }
+
+  // Add product to wishlist
+  static Future<void> addToWishlist(Map<String, dynamic> product) async {
+    final box = await getWishlistBox();
+    final productId = product['id'] as int;
+    await box.put('product_$productId', product);
+  }
+
+  // Remove product from wishlist
+  static Future<void> removeFromWishlist(int productId) async {
+    final box = await getWishlistBox();
+    await box.delete('product_$productId');
+  }
+
+  // Get all wishlist products
+  static Future<List<Map<String, dynamic>>> getWishlistProducts() async {
+    final box = await getWishlistBox();
+    final products = <Map<String, dynamic>>[];
+
+    for (var key in box.keys) {
+      if (key.toString().startsWith('product_')) {
+        final product = box.get(key);
+        if (product is Map) {
+          // Recursively convert Map<dynamic, dynamic> to Map<String, dynamic>
+          products.add(_convertMap(product));
+        }
+      }
+    }
+
+    return products;
+  }
+
+  // Helper method to convert Map<dynamic, dynamic> to Map<String, dynamic>
+  static Map<String, dynamic> _convertMap(Map<dynamic, dynamic> map) {
+    final result = <String, dynamic>{};
+    map.forEach((key, value) {
+      if (value is Map<dynamic, dynamic>) {
+        // Recursively convert nested maps
+        result[key.toString()] = _convertMap(value);
+      } else {
+        result[key.toString()] = value;
+      }
+    });
+    return result;
+  }
+
+  // Get all wishlist product IDs
+  static Future<List<int>> getWishlistIds() async {
+    final products = await getWishlistProducts();
+    return products.map((p) => p['id'] as int).toList();
+  }
+
+  // Check if product is in wishlist
+  static Future<bool> isInWishlist(int productId) async {
+    final box = await getWishlistBox();
+    return box.containsKey('product_$productId');
+  }
+
+  // Toggle wishlist status
+  static Future<bool> toggleWishlist(Map<String, dynamic> product) async {
+    final productId = product['id'] as int;
+    final isInWishlist = await HiveService.isInWishlist(productId);
+    if (isInWishlist) {
+      await removeFromWishlist(productId);
+      return false;
+    } else {
+      await addToWishlist(product);
+      return true;
+    }
+  }
+
+  // Clear all wishlist
+  static Future<void> clearWishlist() async {
+    final box = await getWishlistBox();
+    await box.clear();
+  }
+
+  // Get wishlist count
+  static Future<int> getWishlistCount() async {
+    final box = await getWishlistBox();
+    return box.keys.where((key) => key.toString().startsWith('product_')).length;
   }
 }
 

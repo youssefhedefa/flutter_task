@@ -16,7 +16,7 @@ class ProductMapper {
     );
   }
 
-  static ProductEntity fromJson(Map<String, dynamic> json) {
+  static ProductEntity fromJson(Map<dynamic, dynamic> json) {
     return _toEntity(ProductModel.fromJson(json));
   }
 

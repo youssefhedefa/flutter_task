@@ -17,7 +17,7 @@ class ProductModel {
     required this.rating,
   });
 
-  factory ProductModel.fromJson(Map<String, dynamic> json) {
+  factory ProductModel.fromJson(Map<dynamic, dynamic> json) {
     return ProductModel(
       id: json['id'] as int,
       title: json['title'] as String,

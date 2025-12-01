@@ -9,6 +9,7 @@ abstract class HomeRepository {
     String? category,
     int? limit,
     int? skip,
+    bool forceRefresh = false,
   });
 }
 

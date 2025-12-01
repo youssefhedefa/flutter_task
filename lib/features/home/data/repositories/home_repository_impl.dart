@@ -1,61 +1,74 @@
+import 'dart:developer';
+
 import 'package:flutter_task/core/constants/app_strings.dart';
-import 'package:flutter_task/core/networking/local/hive_service.dart';
 import 'package:flutter_task/core/networking/remote/api_result.dart';
-import 'package:flutter_task/core/networking/remote/api_routes.dart';
-import 'package:flutter_task/core/networking/remote/api_service.dart';
 import 'package:flutter_task/core/networking/remote/cached_data.dart';
 import 'package:flutter_task/core/networking/repository/base_repository.dart';
-import 'package:flutter_task/features/home/data/mappers/product_mapper.dart';
-import 'package:flutter_task/features/home/data/models/category_model.dart';
+import 'package:flutter_task/features/home/data/datasources/home_local_data_source.dart';
+import 'package:flutter_task/features/home/data/datasources/home_remote_data_source.dart';
 import 'package:flutter_task/features/home/domain/entities/category_entity.dart';
 import 'package:flutter_task/features/home/domain/entities/product_entity.dart';
 import 'package:flutter_task/features/home/domain/repositories/home_repository.dart';
 
 class HomeRepositoryImpl extends BaseRepository implements HomeRepository {
-  final ApiService _apiService;
+  final HomeRemoteDataSource _remoteDataSource;
+  final HomeLocalDataSource _localDataSource;
 
-  HomeRepositoryImpl({required ApiService apiService}) : _apiService = apiService;
+  bool _isFirstCategoryRequest = true;
+  final Set<String> _loadedProductCategories = {};
+
+  HomeRepositoryImpl({
+    required HomeRemoteDataSource remoteDataSource,
+    required HomeLocalDataSource localDataSource,
+  })  : _remoteDataSource = remoteDataSource,
+        _localDataSource = localDataSource;
 
   @override
   Future<ApiResult<CachedData<List<CategoryEntity>>>> getCategories({
     bool forceRefresh = false,
   }) async {
-    final apiResult = await executeApiCall<List<CategoryEntity>>(() async {
-      final response = await _apiService.get<List<dynamic>>(
-        endpoint: ApiRoutes.categories,
-      );
+    log('Fetching categories: forceRefresh=$forceRefresh, isFirstRequest=$_isFirstCategoryRequest');
 
-      return response.when<ApiResult<List<CategoryEntity>>>(
-        success: (data) {
-          final categories = data
-              .map((json) => CategoryModel.fromJson(json as String))
-              .map((model) => CategoryEntity(name: model.name))
-              .toList();
+    // First time OR force refresh → load from API
+    if (_isFirstCategoryRequest || forceRefresh) {
+      final apiResult = await executeApiCall(() async {
+        final data = await _remoteDataSource.getCategories();
+        return Success(data);
+      });
 
-          return Success(categories);
-        },
-        failure: (exception) {
-          return Failure(exception);
-        },
-      );
+      if (apiResult is Success<List<CategoryEntity>>) {
+        await _localDataSource.saveCategories(apiResult.data);
+        _isFirstCategoryRequest = false;
+        return Success(CachedData(data: apiResult.data, isFromCache: false));
+      }
+
+      // API failed, try cache as fallback
+      final cachedFallback = await _localDataSource.getCachedCategories();
+      if (cachedFallback != null && cachedFallback.isNotEmpty) {
+        return Success(CachedData(data: cachedFallback, isFromCache: true));
+      }
+
+      return Failure((apiResult as Failure).exception);
+    }
+
+    // Not first time and not force refresh → load from cache
+    final cached = await _localDataSource.getCachedCategories();
+    if (cached != null && cached.isNotEmpty) {
+      return Success(CachedData(data: cached, isFromCache: true));
+    }
+
+    // Cache miss, fetch from API
+    final apiResult = await executeApiCall(() async {
+      final data = await _remoteDataSource.getCategories();
+      return Success(data);
     });
 
     if (apiResult is Success<List<CategoryEntity>>) {
-      await _saveCategoriesLocally(apiResult.data);
+      await _localDataSource.saveCategories(apiResult.data);
       return Success(CachedData(data: apiResult.data, isFromCache: false));
     }
 
-    if (apiResult is Failure<List<CategoryEntity>>) {
-      final cachedCategories = await _getCachedCategories();
-      if (cachedCategories != null && cachedCategories.isNotEmpty) {
-        return Success(CachedData(data: cachedCategories, isFromCache: true));
-      }
-
-      return Failure(apiResult.exception);
-    }
-
-    final failure = apiResult as Failure<List<CategoryEntity>>;
-    return Failure(failure.exception);
+    return Failure((apiResult as Failure).exception);
   }
 
   @override
@@ -63,111 +76,53 @@ class HomeRepositoryImpl extends BaseRepository implements HomeRepository {
     String? category,
     int? limit,
     int? skip,
+    bool forceRefresh = false,
   }) async {
     final categoryKey = category ?? AppStrings.all;
+    final isFirstLoadForCategory = !_loadedProductCategories.contains(categoryKey);
 
-    final cachedProducts = await _getCachedProducts(categoryKey);
+    log('Fetching products for "$categoryKey": forceRefresh=$forceRefresh, isFirstLoad=$isFirstLoadForCategory');
 
-    if (cachedProducts != null && cachedProducts.isNotEmpty) {
-      // Apply pagination to cached data
-      final startIndex = skip ?? 0;
-      final endIndex = limit != null ? startIndex + limit : cachedProducts.length;
+    // First time for this category OR force refresh → load from API
+    if (isFirstLoadForCategory || forceRefresh) {
+      return executeApiCall(() async {
+        final products = await _remoteDataSource.getProducts(category: category);
 
-      final paginatedProducts = cachedProducts
-          .skip(startIndex)
-          .take(endIndex - startIndex)
-          .toList();
+        // Save to cache
+        await _localDataSource.saveProducts(categoryKey, products);
+        _loadedProductCategories.add(categoryKey);
 
-      return Success(paginatedProducts);
+        return Success(_paginate(products, limit, skip));
+      });
     }
 
-    // If no cache, fetch from API
-    return executeApiCall<List<ProductEntity>>(() async {
-      final endpoint = (category == null || category == 'all')
-          ? ApiRoutes.products
-          : ApiRoutes.productsByCategory(category);
+    // Not first time and not force refresh → load from cache
+    final cached = await _localDataSource.getCachedProducts(categoryKey);
+    if (cached != null && cached.isNotEmpty) {
+      log('Returning products from cache for "$categoryKey"');
+      return Success(_paginate(cached, limit, skip));
+    }
 
-      final response = await _apiService.get<List<dynamic>>(
-        endpoint: endpoint,
-      );
+    // Cache miss, fetch from API
+    log('Cache miss for "$categoryKey", fetching from API');
+    return executeApiCall(() async {
+      final products = await _remoteDataSource.getProducts(category: category);
 
-      return response.when<ApiResult<List<ProductEntity>>>(
-        success: (data) {
-          final products = ProductMapper.fromJsonList(data);
-          _saveProductsLocally(categoryKey, products);
-          final startIndex = skip ?? 0;
-          final endIndex = limit != null ? startIndex + limit : products.length;
+      // Save to cache
+      await _localDataSource.saveProducts(categoryKey, products);
 
-          final paginatedProducts = products
-              .skip(startIndex)
-              .take(endIndex - startIndex)
-              .toList();
-
-          return Success(paginatedProducts);
-        },
-        failure: (exception) {
-          return Failure(exception);
-        },
-      );
+      return Success(_paginate(products, limit, skip));
     });
   }
 
-  Future<List<CategoryEntity>?> _getCachedCategories() async {
-    try {
-      final cachedCategories = await HiveService.getCachedCategories();
-      if (cachedCategories != null && cachedCategories.isNotEmpty) {
-        return cachedCategories.map((name) => CategoryEntity(name: name)).toList();
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
-  }
+  List<ProductEntity> _paginate(
+    List<ProductEntity> list,
+    int? limit,
+    int? skip,
+  ) {
+    final start = skip ?? 0;
+    final end = limit != null ? start + limit : list.length;
 
-  Future<void> _saveCategoriesLocally(List<CategoryEntity> categories) async {
-    try {
-      final categoryNames = categories.map((c) => c.name).toList();
-      await HiveService.saveCategories(categoryNames);
-    } catch (e) {
-      // Ignore cache errors
-    }
-  }
-
-  Future<List<ProductEntity>?> _getCachedProducts(String category) async {
-    try {
-      final cachedData = await HiveService.getCachedProducts(category);
-      if (cachedData != null && cachedData.isNotEmpty) {
-        return cachedData.map((json) => ProductMapper.fromJson(json)).toList();
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  Future<void> _saveProductsLocally(
-    String category,
-    List<ProductEntity> products,
-  ) async {
-    try {
-      // Convert products to JSON format for storage
-      final productsJson = products.map((product) {
-        return {
-          'id': product.id,
-          'title': product.title,
-          'price': product.price,
-          'category': product.category,
-          'image': product.image,
-          'rating': {
-            'rate': product.rating,
-            'count': product.ratingCount,
-          },
-        };
-      }).toList();
-
-      await HiveService.saveProducts(category, productsJson);
-    } catch (e) {
-      // Ignore cache errors
-    }
+    return list.skip(start).take(end - start).toList();
   }
 }

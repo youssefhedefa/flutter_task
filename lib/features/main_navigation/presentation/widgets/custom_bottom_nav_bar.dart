@@ -3,16 +3,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_task/core/constants/app_strings.dart';
 import 'package:flutter_task/core/utilities/extensions/context_extension.dart';
 import 'package:flutter_task/generated/assets.dart';
-import '../cubit/bottom_nav_cubit.dart';
-import '../cubit/bottom_nav_state.dart';
+import '../cubit/main_navigation_cubit.dart';
+import '../cubit/main_navigation_state.dart';
 import 'custom_bottom_nav_item.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   const CustomBottomNavBar({super.key});
 
+
+
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<BottomNavCubit, BottomNavState>(
+    return BlocBuilder<MainNavigationCubit, MainNavigationState>(
       buildWhen: (previous, current) => previous.currentIndex != current.currentIndex,
       builder: (context, state) {
         return Container(
@@ -28,7 +30,7 @@ class CustomBottomNavBar extends StatelessWidget {
           ),
           child: BottomNavigationBar(
             currentIndex: state.currentIndex,
-            onTap: (index) => context.read<BottomNavCubit>().changeTab(index),
+            onTap: (index) => context.read<MainNavigationCubit>().changeTab(index),
             selectedItemColor: context.appColors.primaryColor,
             unselectedItemColor: context.appColors.thirdColor,
             type: BottomNavigationBarType.fixed,

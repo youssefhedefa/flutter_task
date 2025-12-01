@@ -40,5 +40,10 @@ class AppStrings {
   // Categories
   static const String all = 'all';
 
-  static const String youAreInOfflineMode = 'You are in offline mode. Displayed data may be outdated.';
+  static const String youAreInOfflineMode =
+      'You are in offline mode. Displayed data may be outdated.';
+
+  static const String useOffLineData = 'Using offline data';
+
+  static const String offlineMode = 'Offline Mode';
 }

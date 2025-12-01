@@ -1,6 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_task/core/constants/app_strings.dart';
-import 'package:flutter_task/core/networking/local/wishlist_service.dart';
 import 'package:flutter_task/core/utilities/enums/request_status_enum.dart';
 import 'package:flutter_task/features/home/domain/usecases/get_categories_usecase.dart';
 import 'package:flutter_task/features/home/domain/usecases/get_products_usecase.dart';
@@ -19,7 +18,6 @@ class HomeCubit extends Cubit<HomeState> {
 
   Future<void> init() async {
     await fetchCategories();
-    await _loadWishlist();
     await fetchProducts();
   }
 
@@ -43,7 +41,7 @@ class HomeCubit extends Cubit<HomeState> {
                 ? AppStrings.all
                 : state.selectedCategory,
             isFromCache: cachedData.isFromCache,
-            errorMessage: cachedData.isFromCache ? 'Using offline data' : null,
+            errorMessage: null,
           ),
         );
       },
@@ -52,14 +50,14 @@ class HomeCubit extends Cubit<HomeState> {
           state.copyWith(
             categoryStatus: RequestStatusEnum.failure,
             errorMessage: error.message,
-            isFromCache: false,
+            isFromCache: state.categories.isNotEmpty ? true : false,
           ),
         );
       },
     );
   }
 
-  Future<void> fetchProducts() async {
+  Future<void> fetchProducts({bool forceRefresh = false}) async {
     emit(
       state.copyWith(
         productsStatus: RequestStatusEnum.loading,
@@ -73,6 +71,7 @@ class HomeCubit extends Cubit<HomeState> {
       category: state.selectedCategory,
       limit: HomeState.productsPerPage,
       skip: 0,
+      forceRefresh: forceRefresh,
     );
 
     result.when(
@@ -141,25 +140,20 @@ class HomeCubit extends Cubit<HomeState> {
     await fetchProducts();
   }
 
-  Future<void> _loadWishlist() async {
-    final wishlistIds = await WishlistService.getWishlist();
-    emit(state.copyWith(wishlistIds: wishlistIds.toSet()));
-  }
-
-  Future<void> toggleWishlist(int productId) async {
-    final isInWishlist = await WishlistService.toggleWishlist(productId);
-
-    final updatedWishlist = Set<int>.from(state.wishlistIds);
-    if (isInWishlist) {
-      updatedWishlist.add(productId);
-    } else {
-      updatedWishlist.remove(productId);
-    }
-
-    emit(state.copyWith(wishlistIds: updatedWishlist));
-  }
-
   void refreshCategories() {
     fetchCategories(forceRefresh: true);
+  }
+
+  Future<void> refreshProducts() async {
+    await fetchProducts(forceRefresh: true);
+  }
+
+  Future<void> refreshAll() async {
+    await fetchCategories(forceRefresh: true);
+    await fetchProducts(forceRefresh: true);
+  }
+
+  void updateWishlistIds(Set<int> wishlistIds) {
+    emit(state.copyWith(wishlistIds: wishlistIds));
   }
 }

@@ -12,11 +12,13 @@ class GetProductsUseCase {
     String? category,
     int? limit,
     int? skip,
+    bool forceRefresh = false,
   }) async {
     return await _repository.getProducts(
       category: category,
       limit: limit,
       skip: skip,
+      forceRefresh: forceRefresh,
     );
   }
 }

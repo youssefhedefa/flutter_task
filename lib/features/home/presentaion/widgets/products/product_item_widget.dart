@@ -4,8 +4,8 @@ import 'package:flutter_task/core/utilities/extensions/context_extension.dart';
 import 'package:flutter_task/core/utilities/extensions/num_extension.dart';
 import 'package:flutter_task/core/widgets/custom_cached_network_image.dart';
 import 'package:flutter_task/features/home/domain/entities/product_entity.dart';
-import 'package:flutter_task/features/home/presentaion/cubit/home_cubit.dart';
-import 'package:flutter_task/features/home/presentaion/cubit/home_state.dart';
+import 'package:flutter_task/features/main_navigation/presentation/cubit/main_navigation_cubit.dart';
+import 'package:flutter_task/features/main_navigation/presentation/cubit/main_navigation_state.dart';
 
 class ProductItemWidget extends StatelessWidget {
   final ProductEntity product;
@@ -17,7 +17,10 @@ class ProductItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HomeCubit, HomeState>(
+    // Get MainNavigationCubit - the single source for wishlist operations
+    final navigationCubit = context.read<MainNavigationCubit>();
+
+    return BlocBuilder<MainNavigationCubit, MainNavigationState>(
       builder: (context, state) {
         final isInWishlist = state.wishlistIds.contains(product.id);
 
@@ -100,14 +103,17 @@ class ProductItemWidget extends StatelessWidget {
                         InkWell(
                           borderRadius: BorderRadius.circular(20),
                           child: Icon(
-                            isInWishlist ? Icons.favorite : Icons.favorite_border,
+                            isInWishlist
+                                ? Icons.favorite
+                                : Icons.favorite_border,
                             color: isInWishlist
                                 ? context.appColors.primaryColor
                                 : context.appColors.thirdColor,
                             size: 22,
                           ),
                           onTap: () {
-                            context.read<HomeCubit>().toggleWishlist(product.id);
+                            // Use MainNavigationCubit - single responsibility
+                            navigationCubit.toggleWishlist(product);
                           },
                         ),
                       ],

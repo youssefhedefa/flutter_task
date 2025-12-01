@@ -33,27 +33,12 @@ class WishlistService {
       if (key.toString().startsWith('product_')) {
         final product = box.get(key);
         if (product is Map) {
-          // Recursively convert Map<dynamic, dynamic> to Map<String, dynamic>
-          products.add(_convertMap(product));
+          products.add(Map<String, dynamic>.from(product));
         }
       }
     }
 
     return products;
-  }
-
-  // Helper method to convert Map<dynamic, dynamic> to Map<String, dynamic>
-  static Map<String, dynamic> _convertMap(Map<dynamic, dynamic> map) {
-    final result = <String, dynamic>{};
-    map.forEach((key, value) {
-      if (value is Map<dynamic, dynamic>) {
-        // Recursively convert nested maps
-        result[key.toString()] = _convertMap(value);
-      } else {
-        result[key.toString()] = value;
-      }
-    });
-    return result;
   }
 
   // Get all wishlist product IDs
@@ -93,3 +78,4 @@ class WishlistService {
     return box.keys.where((key) => key.toString().startsWith('product_')).length;
   }
 }
+
