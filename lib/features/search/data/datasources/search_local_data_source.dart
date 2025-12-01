@@ -1,7 +1,6 @@
 import 'dart:developer';
 
-import 'package:flutter_task/core/networking/local/hive_service.dart';
-import 'package:flutter_task/features/home/data/mappers/product_mapper.dart';
+import 'package:flutter_task/core/networking/storage/domain/products_local_storage.dart';import 'package:flutter_task/features/home/data/mappers/product_mapper.dart';
 import 'package:flutter_task/features/home/domain/entities/product_entity.dart';
 
 abstract class SearchLocalDataSource {
@@ -9,10 +8,16 @@ abstract class SearchLocalDataSource {
 }
 
 class SearchLocalDataSourceImpl implements SearchLocalDataSource {
+  final ProductsLocalStorage _productsStorage;
+
+  SearchLocalDataSourceImpl({
+    required ProductsLocalStorage productsStorage,
+  }) : _productsStorage = productsStorage;
+
   @override
   Future<List<ProductEntity>> searchProductsLocally(String query) async {
     try {
-      final allProducts = await HiveService.getAllCachedProducts();
+      final allProducts = await _productsStorage.getAllCachedProducts();
 
       if (allProducts.isEmpty) {
         return [];

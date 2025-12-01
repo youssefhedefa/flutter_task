@@ -58,14 +58,24 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> fetchProducts({bool forceRefresh = false}) async {
-    emit(
-      state.copyWith(
-        productsStatus: RequestStatusEnum.loading,
-        currentPage: 1,
-        products: [],
-        hasMoreProducts: true,
-      ),
-    );
+    // Only show loading and clear products if we don't have any products yet
+    if (state.products.isEmpty) {
+      emit(
+        state.copyWith(
+          productsStatus: RequestStatusEnum.loading,
+          currentPage: 1,
+          products: [],
+          hasMoreProducts: true,
+        ),
+      );
+    } else {
+      // We have products, just update status to loading
+      emit(
+        state.copyWith(
+          productsStatus: RequestStatusEnum.loading,
+        ),
+      );
+    }
 
     final result = await _getProductsUseCase.execute(
       category: state.selectedCategory,
@@ -83,23 +93,36 @@ class HomeCubit extends Cubit<HomeState> {
             products: products,
             currentPage: 1,
             hasMoreProducts: hasMore,
+            errorMessage: null,
           ),
         );
       },
       failure: (error) {
-        emit(
-          state.copyWith(
-            productsStatus: RequestStatusEnum.failure,
-            errorMessage: error.message,
-          ),
-        );
+        // If we have cached products from the fallback, keep them and show success
+        // Otherwise show error state
+        if (state.products.isEmpty) {
+          emit(
+            state.copyWith(
+              productsStatus: RequestStatusEnum.failure,
+              errorMessage: error.message,
+            ),
+          );
+        } else {
+          // We have cached products, show them with a subtle error message
+          emit(
+            state.copyWith(
+              productsStatus: RequestStatusEnum.success,
+              errorMessage: 'Showing cached data: ${error.message}',
+            ),
+          );
+        }
       },
     );
   }
 
   Future<void> loadMoreProducts() async {
     if (state.hasMoreProducts && !state.isLoadingMore) {
-      emit(state.copyWith(isLoadingMore: true));
+      emit(state.copyWith(productsStatus: RequestStatusEnum.loadingMore));
 
       final nextPage = state.currentPage + 1;
       final skip = state.currentPage * HomeState.productsPerPage;
@@ -112,22 +135,34 @@ class HomeCubit extends Cubit<HomeState> {
 
       result.when(
         success: (newProducts) {
-          final updatedProducts = [...state.products, ...newProducts];
-          final hasMore = newProducts.length == HomeState.productsPerPage;
-          emit(
-            state.copyWith(
-              products: updatedProducts,
-              currentPage: nextPage,
-              isLoadingMore: false,
-              hasMoreProducts: hasMore,
-            ),
-          );
+          if (newProducts.isEmpty) {
+            // No more products available
+            emit(
+              state.copyWith(
+                productsStatus: RequestStatusEnum.success,
+                hasMoreProducts: false,
+              ),
+            );
+          } else {
+            final updatedProducts = [...state.products, ...newProducts];
+            final hasMore = newProducts.length == HomeState.productsPerPage;
+            emit(
+              state.copyWith(
+                productsStatus: RequestStatusEnum.success,
+                products: updatedProducts,
+                currentPage: nextPage,
+                hasMoreProducts: hasMore,
+                errorMessage: null,
+              ),
+            );
+          }
         },
         failure: (error) {
           emit(
             state.copyWith(
-              isLoadingMore: false,
-              errorMessage: error.message,
+              productsStatus: RequestStatusEnum.failure,
+              hasMoreProducts: false,
+              errorMessage: 'Failed to load more: ${error.message}',
             ),
           );
         },
@@ -136,8 +171,17 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> selectCategory(String category) async {
-    emit(state.copyWith(selectedCategory: category));
-    await fetchProducts();
+    // Only reset if changing to a different category
+    if (state.selectedCategory != category) {
+      emit(state.copyWith(
+        selectedCategory: category,
+        currentPage: 1,
+        products: [],
+        hasMoreProducts: true,
+        errorMessage: null,
+      ));
+      await fetchProducts();
+    }
   }
 
   void refreshCategories() {

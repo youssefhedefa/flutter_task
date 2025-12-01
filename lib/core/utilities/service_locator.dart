@@ -1,6 +1,13 @@
 import 'package:flutter_task/core/networking/remote/api_service.dart';
 import 'package:flutter_task/core/networking/remote/dio_factory.dart';
-import 'package:flutter_task/core/networking/local/secure_storage_service.dart';
+import 'package:flutter_task/core/networking/storage/domain/secure_storage_service.dart';
+import 'package:flutter_task/core/networking/storage/data/hive_secure_storage_impl.dart';
+import 'package:flutter_task/core/networking/storage/domain/categories_local_storage.dart';
+import 'package:flutter_task/core/networking/storage/domain/products_local_storage.dart';
+import 'package:flutter_task/core/networking/storage/data/hive_categories_storage_impl.dart';
+import 'package:flutter_task/core/networking/storage/data/hive_products_storage_impl.dart';
+import 'package:flutter_task/core/networking/storage/data/hive_wishlist_storage_impl.dart';
+import 'package:flutter_task/core/networking/storage/domain/wishlist_local_storage.dart';
 import 'package:flutter_task/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:flutter_task/features/auth/domain/repositories/auth_repository.dart';
 import 'package:flutter_task/features/auth/domain/usecases/login_usecase.dart';
@@ -33,7 +40,6 @@ import 'package:flutter_task/features/wishlist/domain/usecases/toggle_wishlist_u
 import 'package:flutter_task/features/wishlist/domain/usecases/get_wishlist_ids_usecase.dart';
 import 'package:flutter_task/features/wishlist/domain/usecases/update_wishlist_ids_usecase.dart';
 import 'package:flutter_task/features/main_navigation/presentation/cubit/main_navigation_cubit.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 
 GetIt getIt = GetIt.instance;
@@ -47,9 +53,22 @@ initServiceLocator() {
     () => ApiService(dio: dio),
   );
 
-  const secureStorage = FlutterSecureStorage();
+  // Secure Storage using Hive
   getIt.registerLazySingleton<SecureStorageService>(
-    () => SecureStorageService(secureStorage: secureStorage),
+    () => SecureStorageService(storage: HiveSecureStorageImpl()),
+  );
+
+  // Local Storage Services
+  getIt.registerLazySingleton<CategoriesLocalStorage>(
+    () => HiveCategoriesStorageImpl(),
+  );
+
+  getIt.registerLazySingleton<ProductsLocalStorage>(
+    () => HiveProductsStorageImpl(),
+  );
+
+  getIt.registerLazySingleton<WishlistLocalStorage>(
+    () => HiveWishlistStorageImpl(),
   );
 
   // Auth Repository
@@ -90,7 +109,10 @@ initServiceLocator() {
   );
 
   getIt.registerLazySingleton<HomeLocalDataSource>(
-    () => HomeLocalDataSourceImpl(),
+    () => HomeLocalDataSourceImpl(
+      categoriesStorage: getIt(),
+      productsStorage: getIt(),
+    ),
   );
 
   // Home Repository
@@ -147,7 +169,9 @@ initServiceLocator() {
 
   // Search Data Sources
   getIt.registerLazySingleton<SearchLocalDataSource>(
-    () => SearchLocalDataSourceImpl(),
+    () => SearchLocalDataSourceImpl(
+      productsStorage: getIt(),
+    ),
   );
 
   // Search Repository
@@ -171,7 +195,9 @@ initServiceLocator() {
 
   // Wishlist Repository
   getIt.registerLazySingleton<WishlistRepositoryImpl>(
-    () => WishlistRepositoryImpl(),
+    () => WishlistRepositoryImpl(
+      wishlistStorage: getIt(),
+    ),
   );
 
   getIt.registerLazySingleton<WishlistRepository>(

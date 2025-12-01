@@ -1,5 +1,5 @@
 import 'package:flutter_task/core/networking/exceptions/api_exception.dart';
-import 'package:flutter_task/core/networking/local/secure_storage_service.dart';
+import 'package:flutter_task/core/networking/storage/domain/secure_storage_service.dart';
 import 'package:flutter_task/core/networking/remote/api_result.dart';
 import 'package:flutter_task/core/networking/remote/api_routes.dart';
 import 'package:flutter_task/core/networking/remote/api_service.dart';

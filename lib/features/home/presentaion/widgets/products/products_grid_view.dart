@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_task/core/utilities/enums/request_status_enum.dart';
-import 'package:flutter_task/core/utilities/extensions/widget_extension.dart';
 import 'package:flutter_task/features/home/domain/entities/product_entity.dart';
 import 'package:flutter_task/features/home/presentaion/cubit/home_cubit.dart';
 import 'package:flutter_task/features/home/presentaion/cubit/home_state.dart';
 import 'package:flutter_task/features/home/presentaion/widgets/products/empty_products_widget.dart';
 import 'package:flutter_task/features/home/presentaion/widgets/products/product_grid_view_builder.dart';
-import 'package:flutter_task/features/home/presentaion/widgets/products/product_item_widget.dart';
 import 'package:flutter_task/features/home/presentaion/widgets/products/products_error_widget.dart';
 
 class ProductsGridView extends StatefulWidget {
@@ -69,6 +67,7 @@ class _ProductsGridViewState extends State<ProductsGridView> {
         return ProductGridViewBuilder(
           products: state.products,
           isLoadingMore: state.isLoadingMore,
+          scrollController: _scrollController,
         );
       },
     );
@@ -87,8 +86,8 @@ class _ProductsGridViewState extends State<ProductsGridView> {
         ratingCount: 100,
       ),
     );
-
     return ProductGridViewBuilder(
+      scrollController: _scrollController,
       isLoading: true,
       products: dummyProducts,
     );

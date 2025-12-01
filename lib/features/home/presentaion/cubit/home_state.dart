@@ -16,7 +16,6 @@ class HomeState extends Equatable {
   final Set<int> wishlistIds;
 
   // Pagination
-  final bool isLoadingMore;
   final bool hasMoreProducts;
   final int currentPage;
   static const int productsPerPage = 8;
@@ -30,10 +29,12 @@ class HomeState extends Equatable {
     this.productsStatus = RequestStatusEnum.initial,
     this.products = const [],
     this.wishlistIds = const {},
-    this.isLoadingMore = false,
     this.hasMoreProducts = true,
     this.currentPage = 1,
   });
+
+  // Computed property for checking if loading more
+  bool get isLoadingMore => productsStatus == RequestStatusEnum.loadingMore;
 
   HomeState copyWith({
     RequestStatusEnum? categoryStatus,
@@ -43,7 +44,6 @@ class HomeState extends Equatable {
     bool? isFromCache,
     RequestStatusEnum? productsStatus,
     List<ProductEntity>? products,
-    bool? isLoadingMore,
     Set<int>? wishlistIds,
     bool? hasMoreProducts,
     int? currentPage,
@@ -56,7 +56,6 @@ class HomeState extends Equatable {
       isFromCache: isFromCache ?? this.isFromCache,
       productsStatus: productsStatus ?? this.productsStatus,
       products: products ?? this.products,
-      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       wishlistIds: wishlistIds ?? this.wishlistIds,
       hasMoreProducts: hasMoreProducts ?? this.hasMoreProducts,
       currentPage: currentPage ?? this.currentPage,
@@ -70,7 +69,6 @@ class HomeState extends Equatable {
         selectedCategory,
         errorMessage,
         isFromCache,
-        isLoadingMore,
         productsStatus,
         products,
         wishlistIds,

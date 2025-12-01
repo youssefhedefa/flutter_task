@@ -14,9 +14,6 @@ class HomeRepositoryImpl extends BaseRepository implements HomeRepository {
   final HomeRemoteDataSource _remoteDataSource;
   final HomeLocalDataSource _localDataSource;
 
-  bool _isFirstCategoryRequest = true;
-  final Set<String> _loadedProductCategories = {};
-
   HomeRepositoryImpl({
     required HomeRemoteDataSource remoteDataSource,
     required HomeLocalDataSource localDataSource,
@@ -27,10 +24,9 @@ class HomeRepositoryImpl extends BaseRepository implements HomeRepository {
   Future<ApiResult<CachedData<List<CategoryEntity>>>> getCategories({
     bool forceRefresh = false,
   }) async {
-    log('Fetching categories: forceRefresh=$forceRefresh, isFirstRequest=$_isFirstCategoryRequest');
 
     // First time OR force refresh → load from API
-    if (_isFirstCategoryRequest || forceRefresh) {
+    if (forceRefresh) {
       final apiResult = await executeApiCall(() async {
         final data = await _remoteDataSource.getCategories();
         return Success(data);
@@ -38,7 +34,6 @@ class HomeRepositoryImpl extends BaseRepository implements HomeRepository {
 
       if (apiResult is Success<List<CategoryEntity>>) {
         await _localDataSource.saveCategories(apiResult.data);
-        _isFirstCategoryRequest = false;
         return Success(CachedData(data: apiResult.data, isFromCache: false));
       }
 
@@ -79,21 +74,34 @@ class HomeRepositoryImpl extends BaseRepository implements HomeRepository {
     bool forceRefresh = false,
   }) async {
     final categoryKey = category ?? AppStrings.all;
-    final isFirstLoadForCategory = !_loadedProductCategories.contains(categoryKey);
 
-    log('Fetching products for "$categoryKey": forceRefresh=$forceRefresh, isFirstLoad=$isFirstLoadForCategory');
+    log('Fetching products for "$categoryKey": forceRefresh=$forceRefresh, limit=$limit, skip=$skip');
 
     // First time for this category OR force refresh → load from API
-    if (isFirstLoadForCategory || forceRefresh) {
-      return executeApiCall(() async {
+    if (forceRefresh) {
+      final apiResult = await executeApiCall(() async {
         final products = await _remoteDataSource.getProducts(category: category);
 
         // Save to cache
         await _localDataSource.saveProducts(categoryKey, products);
-        _loadedProductCategories.add(categoryKey);
-
         return Success(_paginate(products, limit, skip));
       });
+
+      // If API call succeeds, return the result
+      if (apiResult is Success<List<ProductEntity>>) {
+        return apiResult;
+      }
+
+      // API failed, try cache as fallback
+      log('API failed for "$categoryKey", falling back to cache');
+      final cachedFallback = await _localDataSource.getCachedProducts(categoryKey);
+      if (cachedFallback != null && cachedFallback.isNotEmpty) {
+        log('Returning cached fallback for "$categoryKey"');
+        return Success(_paginate(cachedFallback, limit, skip));
+      }
+
+      // No cache available, return the API error
+      return apiResult;
     }
 
     // Not first time and not force refresh → load from cache
@@ -105,7 +113,7 @@ class HomeRepositoryImpl extends BaseRepository implements HomeRepository {
 
     // Cache miss, fetch from API
     log('Cache miss for "$categoryKey", fetching from API');
-    return executeApiCall(() async {
+    final apiResult = await executeApiCall(() async {
       final products = await _remoteDataSource.getProducts(category: category);
 
       // Save to cache
@@ -113,16 +121,45 @@ class HomeRepositoryImpl extends BaseRepository implements HomeRepository {
 
       return Success(_paginate(products, limit, skip));
     });
+
+    // If API call succeeds, return the result
+    if (apiResult is Success<List<ProductEntity>>) {
+      return apiResult;
+    }
+
+    // API failed and no cache available, return error
+    return apiResult;
   }
 
+  /// Paginate a list of products
+  /// [list] - The full list of products
+  /// [limit] - Maximum number of items to return
+  /// [skip] - Number of items to skip from the start
   List<ProductEntity> _paginate(
     List<ProductEntity> list,
     int? limit,
     int? skip,
   ) {
-    final start = skip ?? 0;
-    final end = limit != null ? start + limit : list.length;
+    final skipCount = skip ?? 0;
 
-    return list.skip(start).take(end - start).toList();
+    log('Paginating: total=${list.length}, skip=$skipCount, limit=$limit');
+
+    // If skip is beyond list length, return empty list
+    if (skipCount >= list.length) {
+      log('Skip beyond list length, returning empty');
+      return [];
+    }
+
+    // Skip items and take up to limit
+    if (limit != null) {
+      final result = list.skip(skipCount).take(limit).toList();
+      log('Returning ${result.length} items (limit applied)');
+      return result;
+    }
+
+    // No limit, return all remaining items
+    final result = list.skip(skipCount).toList();
+    log('Returning ${result.length} items (no limit)');
+    return result;
   }
 }

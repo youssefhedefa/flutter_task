@@ -33,6 +33,7 @@ class CustomAppTextField extends StatelessWidget {
       enabled: enabled,
       style: appTextStyles.font14Regular,
       onTapOutside: (_) => FocusScope.of(context).unfocus(),
+      cursorColor: colors.primaryColor,
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: appTextStyles.font14MediumThirdColor,

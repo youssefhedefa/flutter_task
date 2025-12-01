@@ -1,4 +1,4 @@
-import 'package:flutter_task/core/networking/local/secure_storage_service.dart';
+import  'package:flutter_task/core/networking/storage/domain/secure_storage_service.dart';
 
 class CheckAuthUseCase {
   final SecureStorageService _secureStorageService;

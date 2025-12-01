@@ -1,4 +1,5 @@
-import 'package:flutter_task/core/networking/local/hive_service.dart';
+import  'package:flutter_task/core/networking/storage/domain/categories_local_storage.dart';
+import 'package:flutter_task/core/networking/storage/domain/products_local_storage.dart';
 import 'package:flutter_task/features/home/data/mappers/product_mapper.dart';
 import 'package:flutter_task/features/home/domain/entities/category_entity.dart';
 import 'package:flutter_task/features/home/domain/entities/product_entity.dart';
@@ -11,10 +12,19 @@ abstract class HomeLocalDataSource {
 }
 
 class HomeLocalDataSourceImpl implements HomeLocalDataSource {
+  final CategoriesLocalStorage _categoriesStorage;
+  final ProductsLocalStorage _productsStorage;
+
+  HomeLocalDataSourceImpl({
+    required CategoriesLocalStorage categoriesStorage,
+    required ProductsLocalStorage productsStorage,
+  })  : _categoriesStorage = categoriesStorage,
+        _productsStorage = productsStorage;
+
   @override
   Future<List<CategoryEntity>?> getCachedCategories() async {
     try {
-      final cachedCategories = await HiveService.getCachedCategories();
+      final cachedCategories = await _categoriesStorage.getCategories();
       if (cachedCategories != null && cachedCategories.isNotEmpty) {
         return cachedCategories.map((name) => CategoryEntity(name: name)).toList();
       }
@@ -28,7 +38,7 @@ class HomeLocalDataSourceImpl implements HomeLocalDataSource {
   Future<void> saveCategories(List<CategoryEntity> categories) async {
     try {
       final categoryNames = categories.map((c) => c.name).toList();
-      await HiveService.saveCategories(categoryNames);
+      await _categoriesStorage.saveCategories(categoryNames);
     } catch (e) {
       // Ignore cache errors
     }
@@ -37,7 +47,7 @@ class HomeLocalDataSourceImpl implements HomeLocalDataSource {
   @override
   Future<List<ProductEntity>?> getCachedProducts(String category) async {
     try {
-      final cachedData = await HiveService.getCachedProducts(category);
+      final cachedData = await _productsStorage.getCachedProducts(category);
       if (cachedData != null && cachedData.isNotEmpty) {
         return cachedData.map((json) => ProductMapper.fromJson(json)).toList();
       }
@@ -65,7 +75,7 @@ class HomeLocalDataSourceImpl implements HomeLocalDataSource {
         };
       }).toList();
 
-      await HiveService.saveProducts(category, productsJson);
+      await _productsStorage.saveProducts(category, productsJson);
     } catch (e) {
       // Ignore cache errors
     }

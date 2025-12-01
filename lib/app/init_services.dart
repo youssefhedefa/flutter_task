@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_task/core/networking/local/hive_service.dart';
+import 'package:flutter_task/core/networking/storage/data/hive_service.dart';
 import 'package:flutter_task/core/utilities/service_locator.dart';
 import 'package:get_it/get_it.dart';
 
