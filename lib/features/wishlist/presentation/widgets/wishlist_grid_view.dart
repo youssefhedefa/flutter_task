@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_task/core/utilities/enums/request_status_enum.dart';
-import 'package:flutter_task/core/utilities/extensions/widget_extension.dart';
 import 'package:flutter_task/features/home/domain/entities/product_entity.dart';
-import 'package:flutter_task/features/home/presentaion/widgets/products/product_item_widget.dart';
+import 'package:flutter_task/features/home/presentaion/widgets/products/product_grid_view_builder.dart';
 import 'package:flutter_task/features/main_navigation/presentation/cubit/main_navigation_cubit.dart';
 import 'package:flutter_task/features/main_navigation/presentation/cubit/main_navigation_state.dart';
 import 'package:flutter_task/features/wishlist/presentation/widgets/empty_wishlist_widget.dart';
@@ -45,7 +44,7 @@ class _WishlistGridViewState extends State<WishlistGridView> {
           return const EmptyWishlistWidget();
         }
 
-        return _buildGridView(products: state.wishlistProducts);
+        return ProductGridViewBuilder(products: state.wishlistProducts);
       },
     );
   }
@@ -64,29 +63,7 @@ class _WishlistGridViewState extends State<WishlistGridView> {
       ),
     );
 
-    return _buildGridView(products: dummyProducts, isLoading: true);
+    return ProductGridViewBuilder(products: dummyProducts, isLoading: true);
   }
 
-  Widget _buildGridView({
-    required List<ProductEntity> products,
-    bool isLoading = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.6,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-        ),
-        itemCount: products.length,
-        itemBuilder: (context, index) {
-          return ProductItemWidget(
-            product: products[index],
-          ).loading(isLoading: isLoading);
-        },
-      ),
-    );
-  }
 }

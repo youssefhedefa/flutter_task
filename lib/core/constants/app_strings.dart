@@ -56,4 +56,13 @@ class AppStrings {
   static const String failedToLoadProduct = 'Failed to load product details';
   static const String goBack = 'Go Back';
   static const String reviews = 'reviews';
+
+  // Search
+  static const String search = 'Search';
+  static const String searchProducts = 'Search products...';
+  static const String searchForProducts = 'Search for products';
+  static const String noProductsFound = 'No products found';
+  static const String tryDifferentKeywords = 'Try different keywords';
+  static const String productsFound = 'products found';
+  static const String somethingWentWrong = 'Something went wrong';
 }

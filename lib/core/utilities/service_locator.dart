@@ -17,6 +17,11 @@ import 'package:flutter_task/features/product_details/data/repositories/product_
 import 'package:flutter_task/features/product_details/domain/repositories/product_details_repository.dart';
 import 'package:flutter_task/features/product_details/domain/usecases/get_product_details_usecase.dart';
 import 'package:flutter_task/features/product_details/presentation/cubit/product_details_cubit.dart';
+import 'package:flutter_task/features/search/data/datasources/search_local_data_source.dart';
+import 'package:flutter_task/features/search/data/repositories/search_repository_impl.dart';
+import 'package:flutter_task/features/search/domain/repositories/search_repository.dart';
+import 'package:flutter_task/features/search/domain/usecases/search_products_usecase.dart';
+import 'package:flutter_task/features/search/presentation/bloc/search_bloc.dart';
 import 'package:flutter_task/features/splash/domain/usecases/check_auth_usecase.dart';
 import 'package:flutter_task/features/splash/presentation/cubit/splash_cubit.dart';
 import 'package:flutter_task/features/wishlist/data/repositories/wishlist_repository_impl.dart';
@@ -137,6 +142,30 @@ initServiceLocator() {
       toggleWishlistUseCase: getIt(),
       checkProductInWishlistUseCase: getIt(),
       getWishlistIdsUseCase: getIt(),
+    ),
+  );
+
+  // Search Data Sources
+  getIt.registerLazySingleton<SearchLocalDataSource>(
+    () => SearchLocalDataSourceImpl(),
+  );
+
+  // Search Repository
+  getIt.registerLazySingleton<SearchRepository>(
+    () => SearchRepositoryImpl(
+      localDataSource: getIt(),
+    ),
+  );
+
+  // Search Use Cases
+  getIt.registerLazySingleton<SearchProductsUseCase>(
+    () => SearchProductsUseCase(repository: getIt()),
+  );
+
+  // Search Bloc
+  getIt.registerFactory<SearchBloc>(
+    () => SearchBloc(
+      searchProductsUseCase: getIt(),
     ),
   );
 

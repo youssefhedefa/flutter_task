@@ -72,6 +72,27 @@ class HiveService {
     await box.clear();
   }
 
+  // Get all cached products from all categories
+  static Future<List<Map<String, dynamic>>> getAllCachedProducts() async {
+    final box = await getProductsBox();
+    final allProducts = <Map<String, dynamic>>[];
+
+    for (var key in box.keys) {
+      if (key.toString().startsWith('products_')) {
+        final data = box.get(key);
+        if (data != null && data is List) {
+          for (var item in data) {
+            if (item is Map) {
+              allProducts.add(_convertMap(item as Map<dynamic, dynamic>));
+            }
+          }
+        }
+      }
+    }
+
+    return allProducts;
+  }
+
   // Close all boxes
   static Future<void> closeAll() async {
     await Hive.close();

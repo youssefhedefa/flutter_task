@@ -6,6 +6,7 @@ import 'package:flutter_task/features/home/domain/entities/product_entity.dart';
 import 'package:flutter_task/features/home/presentaion/cubit/home_cubit.dart';
 import 'package:flutter_task/features/home/presentaion/cubit/home_state.dart';
 import 'package:flutter_task/features/home/presentaion/widgets/products/empty_products_widget.dart';
+import 'package:flutter_task/features/home/presentaion/widgets/products/product_grid_view_builder.dart';
 import 'package:flutter_task/features/home/presentaion/widgets/products/product_item_widget.dart';
 import 'package:flutter_task/features/home/presentaion/widgets/products/products_error_widget.dart';
 
@@ -65,7 +66,7 @@ class _ProductsGridViewState extends State<ProductsGridView> {
           return const EmptyProductsWidget();
         }
 
-        return _buildGridView(
+        return ProductGridViewBuilder(
           products: state.products,
           isLoadingMore: state.isLoadingMore,
         );
@@ -87,41 +88,9 @@ class _ProductsGridViewState extends State<ProductsGridView> {
       ),
     );
 
-    return _buildGridView(
+    return ProductGridViewBuilder(
       isLoading: true,
       products: dummyProducts,
-    );
-  }
-
-  Widget _buildGridView({
-    bool isLoading = false,
-    bool isLoadingMore = false,
-    required List<ProductEntity> products,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: GridView.builder(
-        controller: _scrollController,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.6,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-        ),
-        itemCount: isLoadingMore ? products.length + 2 : products.length,
-        itemBuilder: (context, index) {
-          if (index >= products.length) {
-            return ProductItemWidget(
-              product: products[0],
-            ).loading(isLoading: true);
-          }
-          return ProductItemWidget(
-            product: products[index],
-          ).loading(
-            isLoading: isLoading,
-          );
-        },
-      ),
     );
   }
 }

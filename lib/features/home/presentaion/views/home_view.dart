@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_task/core/constants/app_strings.dart';
+import 'package:flutter_task/core/routing/routing_constants.dart';
 import 'package:flutter_task/core/utilities/extensions/context_extension.dart';
 import 'package:flutter_task/core/utilities/service_locator.dart';
 import 'package:flutter_task/features/home/presentaion/cubit/home_cubit.dart';
@@ -35,6 +36,12 @@ class HomeView extends StatelessWidget {
               title: const Text(AppStrings.home),
               centerTitle: true,
               actions: [
+                IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () {
+                    context.pushNamed(AppRoutingConstants.search);
+                  },
+                ),
                 BlocBuilder<HomeCubit, HomeState>(
                   buildWhen: (previous, current) =>
                       previous.isFromCache != current.isFromCache,
