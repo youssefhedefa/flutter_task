@@ -14,7 +14,7 @@ class FlutterTaskApp extends StatelessWidget {
       theme: AppTheme().lightTheme,
       darkTheme: AppTheme().darkTheme,
       onGenerateRoute: AppRoutingManager().onGenerateRoute,
-      initialRoute: AppRoutingConstants.login,
+      initialRoute: AppRoutingConstants.splash,
     );
   }
 }

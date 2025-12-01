@@ -1,0 +1,60 @@
+import 'package:flutter_task/core/networking/remote/api_service.dart';
+import 'package:flutter_task/core/networking/remote/dio_factory.dart';
+import 'package:flutter_task/core/networking/local/secure_storage_service.dart';
+import 'package:flutter_task/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:flutter_task/features/auth/domain/repositories/auth_repository.dart';
+import 'package:flutter_task/features/auth/domain/usecases/login_usecase.dart';
+import 'package:flutter_task/features/auth/presentation/cubit/login_cubit.dart';
+import 'package:flutter_task/features/splash/domain/usecases/check_auth_usecase.dart';
+import 'package:flutter_task/features/splash/presentation/cubit/splash_cubit.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:get_it/get_it.dart';
+
+GetIt getIt = GetIt.instance;
+
+initServiceLocator() {
+  // Dio
+  final dio = DioFactory.getDio();
+
+  // Core Services
+  getIt.registerLazySingleton<ApiService>(
+    () => ApiService(dio: dio),
+  );
+
+  const secureStorage = FlutterSecureStorage();
+  getIt.registerLazySingleton<SecureStorageService>(
+    () => SecureStorageService(secureStorage: secureStorage),
+  );
+
+  // Auth Repository
+  getIt.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(
+      apiService: getIt(),
+      secureStorageService: getIt(),
+    ),
+  );
+
+  // Auth Use Cases
+  getIt.registerLazySingleton<LoginUseCase>(
+    () => LoginUseCase(authRepository: getIt()),
+  );
+
+  // Auth Cubit
+  getIt.registerFactory<LoginCubit>(
+    () => LoginCubit(
+      loginUseCase: getIt(),
+    ),
+  );
+
+  // Splash Use Cases
+  getIt.registerLazySingleton<CheckAuthUseCase>(
+    () => CheckAuthUseCase(secureStorageService: getIt()),
+  );
+
+  // Splash Cubit
+  getIt.registerFactory<SplashCubit>(
+    () => SplashCubit(
+      checkAuthUseCase: getIt(),
+    ),
+  );
+}

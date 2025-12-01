@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_task/core/utilities/enums/request_status_enum.dart';
 import 'package:flutter_task/core/utilities/extensions/num_extension.dart';
+import 'package:flutter_task/features/auth/presentation/cubit/login_cubit.dart';
 import 'package:flutter_task/features/auth/presentation/widgets/login_button.dart';
-import 'package:flutter_task/features/auth/presentation/widgets/login_email_field.dart';
+import 'package:flutter_task/features/auth/presentation/widgets/login_username_field.dart';
 import 'package:flutter_task/features/auth/presentation/widgets/login_password_field.dart';
 import 'package:flutter_task/features/auth/presentation/widgets/login_title.dart';
 
@@ -14,7 +17,7 @@ class LoginViewBody extends StatefulWidget {
 
 class _LoginViewBodyState extends State<LoginViewBody> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
@@ -24,7 +27,7 @@ class _LoginViewBodyState extends State<LoginViewBody> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -32,28 +35,33 @@ class _LoginViewBodyState extends State<LoginViewBody> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              60.verticalSpace,
-              const LoginTitle(),
-              60.verticalSpace,
-              LoginEmailField(
-                controller: _emailController,
-              ),
-              20.verticalSpace,
-              LoginPasswordField(
-                controller: _passwordController,
-              ),
-              40.verticalSpace,
-              LoginButton(
-                onPressed: () {},
-              ),
-            ],
+      child: AbsorbPointer(
+        absorbing: context.watch<LoginCubit>().state.status.isLoading,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                60.verticalSpace,
+                const LoginTitle(),
+                60.verticalSpace,
+                LoginUsernameField(
+                  controller: _usernameController,
+                ),
+                20.verticalSpace,
+                LoginPasswordField(
+                  controller: _passwordController,
+                ),
+                40.verticalSpace,
+                LoginButton(
+                  formKey: _formKey,
+                  usernameController: _usernameController,
+                  passwordController: _passwordController,
+                ),
+              ],
+            ),
           ),
         ),
       ),

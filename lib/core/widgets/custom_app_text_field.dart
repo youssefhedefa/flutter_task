@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_task/core/theming/colors/app_colors.dart';
 import 'package:flutter_task/core/utilities/extensions/context_extension.dart';
 
 class CustomAppTextField extends StatelessWidget {
@@ -33,6 +32,7 @@ class CustomAppTextField extends StatelessWidget {
       validator: validator,
       enabled: enabled,
       style: appTextStyles.font14Regular,
+      onTapOutside: (_) => FocusScope.of(context).unfocus(),
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: appTextStyles.font14MediumThirdColor,

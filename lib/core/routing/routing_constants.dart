@@ -1,4 +1,5 @@
 abstract class AppRoutingConstants {
+  static const String splash = '/';
   static const String login = '/auth';
   static const String home = '/home';
   static const String productDetails = '/productDetails';
