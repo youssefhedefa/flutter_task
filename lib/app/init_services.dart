@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_task/core/networking/local/hive_service.dart';
 import 'package:flutter_task/core/utilities/service_locator.dart';
 import 'package:get_it/get_it.dart';
 
@@ -17,6 +18,7 @@ class IniServices {
   Future<void> initialize() async {
     WidgetsFlutterBinding.ensureInitialized();
     makeStatusBarTransparent();
+    await HiveService.init();
     initServiceLocator();
   }
   void makeStatusBarTransparent() {

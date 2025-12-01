@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_task/core/theming/colors/app_colors_schemes.dart';
 import 'package:flutter_task/core/theming/text_styles/app_text_styles_schemes.dart';
 
@@ -17,8 +16,16 @@ class AppTheme {
     return ThemeData(
       brightness: Brightness.light,
       scaffoldBackgroundColor: lightColors.backgroundColor,
+      primaryColor: lightColors.primaryColor,
       textTheme: ThemeData.light().textTheme.apply(
         bodyColor: lightColors.secondaryColor,
+      ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: lightColors.backgroundColor,
+        surfaceTintColor: Colors.transparent,
+      ),
+      iconTheme: IconThemeData(
+        color: lightColors.primaryColor,
       ),
       extensions: <ThemeExtension<dynamic>>[
         lightColors,

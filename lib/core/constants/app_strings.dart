@@ -33,4 +33,9 @@ class AppStrings {
   static const String loginSuccess = 'Login successful';
 
   static const String loginError = 'Login failed';
+
+  static const String home = 'Home';
+  static const String wishlist = 'Wishlist';
+
+  static const String youAreInOfflineMode = 'You are in offline mode. Displayed data may be outdated.';
 }

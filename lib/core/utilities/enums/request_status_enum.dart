@@ -5,7 +5,6 @@ enum RequestStatusEnum {
   failure,
   loadedMore,
 }
-
 extension RequestStatusExtension on RequestStatusEnum {
   bool get isLoading => this == RequestStatusEnum.loading;
   bool get isSuccess => this == RequestStatusEnum.success;

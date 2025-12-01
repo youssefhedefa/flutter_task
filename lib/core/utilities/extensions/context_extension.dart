@@ -13,22 +13,21 @@ extension ContextExtension on BuildContext {
 
   AppTextStyles get appTextStyles => Theme.of(this).extension<AppTextStyles>()!;
 
-
   Future<T?> pushNamed<T extends Object?>(String routeName, {Object? arguments}) {
     return Navigator.of(this).pushNamed<T>(routeName, arguments: arguments);
   }
 
   Future<T?> pushReplacementNamed<T extends Object?>(
-      String routeName, {
-        Object? arguments,
-      }) {
+    String routeName, {
+    Object? arguments,
+  }) {
     return Navigator.of(this).pushReplacementNamed(routeName, arguments: arguments);
   }
 
   void pushNamedAndRemoveUntil(String routeName, {Object? arguments}) {
     Navigator.of(this).pushNamedAndRemoveUntil(
       routeName,
-          (route) => false,
+      (route) => false,
       arguments: arguments,
     );
   }
@@ -50,6 +49,14 @@ extension ContextExtension on BuildContext {
       context: this,
       message: message,
       state: AppSnackBarStates.success,
+    );
+  }
+
+  showAlertSnackBar({required String message}) {
+    AppSnackBarShower.showSnackBar(
+      context: this,
+      message: message,
+      state: AppSnackBarStates.warning,
     );
   }
 }
