@@ -10,7 +10,7 @@ class SearchProductsUseCase {
 
   Future<ApiResult<List<ProductEntity>>> execute(String query) async {
     if (query.trim().isEmpty) {
-      return Success(const []);
+      return const Success([]);
     }
     return await _repository.searchProducts(query);
   }

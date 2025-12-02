@@ -4,9 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../domain/base_secure_storage.dart';
 
-/// Encrypted Hive implementation of secure storage with AES-256 encryption
-/// Data layer - contains framework-specific implementation details
-/// Use this for production apps that handle sensitive data
+
 class HiveEncryptedSecureStorageImpl implements BaseSecureStorage {
   static const String _boxName = 'encrypted_secure_storage_box';
   static const String _tokenKey = 'auth_token';
@@ -14,8 +12,6 @@ class HiveEncryptedSecureStorageImpl implements BaseSecureStorage {
   Box<String>? _box;
   HiveCipher? _encryptionCipher;
 
-  /// Initialize with encryption key
-  /// The key should be generated and stored securely (e.g., using device keychain)
   Future<void> init({String? encryptionKey}) async {
     if (encryptionKey != null) {
       // Generate encryption cipher from key
@@ -24,9 +20,7 @@ class HiveEncryptedSecureStorageImpl implements BaseSecureStorage {
     }
   }
 
-  /// Generate a secure encryption key from a passphrase
   Uint8List _generateEncryptionKey(String passphrase) {
-    // Use SHA-256 to generate a 256-bit key
     final bytes = utf8.encode(passphrase);
     final digest = sha256.convert(bytes);
     return Uint8List.fromList(digest.bytes);
@@ -38,7 +32,6 @@ class HiveEncryptedSecureStorageImpl implements BaseSecureStorage {
     }
 
     if (!Hive.isBoxOpen(_boxName)) {
-      // Open box with encryption if cipher is available
       _box = await Hive.openBox<String>(
         _boxName,
         encryptionCipher: _encryptionCipher,

@@ -1,3 +1,4 @@
+import 'package:flutter_task/core/constants/app_strings.dart';
 import 'package:flutter_task/core/networking/remote/api_routes.dart';
 import 'package:flutter_task/core/networking/remote/api_service.dart';
 import 'package:flutter_task/features/home/data/mappers/product_mapper.dart';
@@ -39,7 +40,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
   @override
   Future<List<ProductEntity>> getProducts({String? category}) async {
-    final endpoint = (category == null || category == 'all')
+    final endpoint = (category == null || category == AppStrings.all)
         ? ApiRoutes.products
         : ApiRoutes.productsByCategory(category);
 

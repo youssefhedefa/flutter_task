@@ -1,8 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import '../domain/wishlist_local_storage.dart';
 
-/// Hive implementation of WishlistLocalStorage
-/// Data layer - contains framework-specific implementation details
 class HiveWishlistStorageImpl implements WishlistLocalStorage {
   static const String _boxName = 'wishlist_box';
 
@@ -52,7 +50,6 @@ class HiveWishlistStorageImpl implements WishlistLocalStorage {
     return products;
   }
 
-  /// Helper method to convert Map<dynamic, dynamic> to Map<String, dynamic>
   Map<String, dynamic> _convertMap(Map<dynamic, dynamic> map) {
     final result = <String, dynamic>{};
     map.forEach((key, value) {

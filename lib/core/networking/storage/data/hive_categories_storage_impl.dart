@@ -1,8 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import '../domain/categories_local_storage.dart';
 
-/// Hive implementation of CategoriesLocalStorage
-/// Data layer - contains framework-specific implementation details
 class HiveCategoriesStorageImpl implements CategoriesLocalStorage {
   static const String _boxName = 'categories_box';
   static const String _categoriesKey = 'categories';

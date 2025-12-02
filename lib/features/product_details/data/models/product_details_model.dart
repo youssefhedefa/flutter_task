@@ -1,4 +1,4 @@
-import 'package:flutter_task/features/home/data/models/product_model.dart';
+import 'package:flutter_task/features/home/data/models/rating_model.dart';
 
 class ProductDetailsModel {
   final int id;
@@ -27,7 +27,7 @@ class ProductDetailsModel {
       description: json['description'] as String,
       category: json['category'] as String,
       image: json['image'] as String,
-      rating: RatingModel.fromJson(json['rating'] as Map<String, dynamic>),
+      rating: RatingModel.fromJson(Map<String, dynamic>.from(json['rating'] as Map)),
     );
   }
 

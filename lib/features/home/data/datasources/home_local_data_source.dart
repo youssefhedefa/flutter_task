@@ -1,4 +1,5 @@
-import  'package:flutter_task/core/networking/storage/domain/categories_local_storage.dart';
+import 'dart:developer';
+import 'package:flutter_task/core/networking/storage/domain/categories_local_storage.dart';
 import 'package:flutter_task/core/networking/storage/domain/products_local_storage.dart';
 import 'package:flutter_task/features/home/data/mappers/product_mapper.dart';
 import 'package:flutter_task/features/home/domain/entities/category_entity.dart';
@@ -18,8 +19,8 @@ class HomeLocalDataSourceImpl implements HomeLocalDataSource {
   HomeLocalDataSourceImpl({
     required CategoriesLocalStorage categoriesStorage,
     required ProductsLocalStorage productsStorage,
-  })  : _categoriesStorage = categoriesStorage,
-        _productsStorage = productsStorage;
+  }) : _categoriesStorage = categoriesStorage,
+       _productsStorage = productsStorage;
 
   @override
   Future<List<CategoryEntity>?> getCachedCategories() async {
@@ -40,7 +41,7 @@ class HomeLocalDataSourceImpl implements HomeLocalDataSource {
       final categoryNames = categories.map((c) => c.name).toList();
       await _categoriesStorage.saveCategories(categoryNames);
     } catch (e) {
-      // Ignore cache errors
+      log('Error saving categories to cache: $e');
     }
   }
 
@@ -49,23 +50,26 @@ class HomeLocalDataSourceImpl implements HomeLocalDataSource {
     try {
       final cachedData = await _productsStorage.getCachedProducts(category);
       if (cachedData != null && cachedData.isNotEmpty) {
-        return cachedData.map((json) => ProductMapper.fromJson(json)).toList();
+        return cachedData.map((json) {
+          return ProductMapper.fromJson(json);
+        }).toList();
       }
       return null;
     } catch (e) {
-      return null;
+      log('Error retrieving cached products for category $category: $e');
     }
+    return null;
   }
 
   @override
   Future<void> saveProducts(String category, List<ProductEntity> products) async {
     try {
-      // Convert products to JSON format for storage
       final productsJson = products.map((product) {
         return {
           'id': product.id,
           'title': product.title,
           'price': product.price,
+          'description': '', // ProductEntity doesn't have description, but ProductModel requires it
           'category': product.category,
           'image': product.image,
           'rating': {
@@ -77,8 +81,7 @@ class HomeLocalDataSourceImpl implements HomeLocalDataSource {
 
       await _productsStorage.saveProducts(category, productsJson);
     } catch (e) {
-      // Ignore cache errors
+      log('Error saving products to cache for category $category: $e');
     }
   }
 }
-

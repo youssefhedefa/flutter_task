@@ -1,5 +1,4 @@
 class ApiConstants {
-  // Private constructor to prevent instantiation
   ApiConstants._();
 
   // Timeouts
@@ -12,21 +11,6 @@ class ApiConstants {
   static const String accept = 'application/json';
   static const String authorization = 'Authorization';
   static const String bearer = 'Bearer';
-
-  // API Endpoints - Authentication
-  static const String login = 'auth/login';
-  static const String register = 'auth/register';
-  static const String logout = 'auth/logout';
-  static const String refreshToken = 'auth/refresh';
-  static const String forgotPassword = 'auth/forgot-password';
-  static const String resetPassword = 'auth/reset-password';
-  static const String verifyOtp = 'auth/verify-otp';
-
-  // API Endpoints - User
-  static const String profile = 'user/profile';
-  static const String updateProfile = 'user/update-profile';
-  static const String changePassword = 'user/change-password';
-  static const String deleteAccount = 'user/delete-account';
 
   // Status Codes
   static const int statusOk = 200;

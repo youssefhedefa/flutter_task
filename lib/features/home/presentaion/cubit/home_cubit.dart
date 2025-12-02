@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_task/core/constants/app_strings.dart';
 import 'package:flutter_task/core/utilities/enums/request_status_enum.dart';
@@ -58,35 +60,26 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> fetchProducts({bool forceRefresh = false}) async {
-    // Only show loading and clear products if we don't have any products yet
-    if (state.products.isEmpty) {
-      emit(
-        state.copyWith(
-          productsStatus: RequestStatusEnum.loading,
-          currentPage: 1,
-          products: [],
-          hasMoreProducts: true,
-        ),
-      );
-    } else {
-      // We have products, just update status to loading
-      emit(
-        state.copyWith(
-          productsStatus: RequestStatusEnum.loading,
-        ),
-      );
-    }
+    emit(
+      state.copyWith(
+        productsStatus: RequestStatusEnum.loading,
+        products: [],
+        currentPage: 1,
+        hasMoreProducts: true,
+      ),
+    );
 
     final result = await _getProductsUseCase.execute(
       category: state.selectedCategory,
-      limit: HomeState.productsPerPage,
+      limit: state.productsPerPage,
       skip: 0,
       forceRefresh: forceRefresh,
     );
 
     result.when(
       success: (products) {
-        final hasMore = products.length == HomeState.productsPerPage;
+        final hasMore = products.length == state.productsPerPage;
+        log('Fetched ${products.length} products. Has more: $hasMore');
         emit(
           state.copyWith(
             productsStatus: RequestStatusEnum.success,
@@ -98,24 +91,12 @@ class HomeCubit extends Cubit<HomeState> {
         );
       },
       failure: (error) {
-        // If we have cached products from the fallback, keep them and show success
-        // Otherwise show error state
-        if (state.products.isEmpty) {
-          emit(
-            state.copyWith(
-              productsStatus: RequestStatusEnum.failure,
-              errorMessage: error.message,
-            ),
-          );
-        } else {
-          // We have cached products, show them with a subtle error message
-          emit(
-            state.copyWith(
-              productsStatus: RequestStatusEnum.success,
-              errorMessage: 'Showing cached data: ${error.message}',
-            ),
-          );
-        }
+        emit(
+          state.copyWith(
+            productsStatus: RequestStatusEnum.failure,
+            errorMessage: error.message,
+          ),
+        );
       },
     );
   }
@@ -125,18 +106,19 @@ class HomeCubit extends Cubit<HomeState> {
       emit(state.copyWith(productsStatus: RequestStatusEnum.loadingMore));
 
       final nextPage = state.currentPage + 1;
-      final skip = state.currentPage * HomeState.productsPerPage;
+      final skip = state.currentPage * state.productsPerPage;
+
+      await Future.delayed(const Duration(milliseconds: 2000));
 
       final result = await _getProductsUseCase.execute(
         category: state.selectedCategory,
-        limit: HomeState.productsPerPage,
+        limit: state.productsPerPage,
         skip: skip,
       );
 
       result.when(
         success: (newProducts) {
           if (newProducts.isEmpty) {
-            // No more products available
             emit(
               state.copyWith(
                 productsStatus: RequestStatusEnum.success,
@@ -145,7 +127,7 @@ class HomeCubit extends Cubit<HomeState> {
             );
           } else {
             final updatedProducts = [...state.products, ...newProducts];
-            final hasMore = newProducts.length == HomeState.productsPerPage;
+            final hasMore = newProducts.length == state.productsPerPage;
             emit(
               state.copyWith(
                 productsStatus: RequestStatusEnum.success,
@@ -171,25 +153,22 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> selectCategory(String category) async {
-    // Only reset if changing to a different category
     if (state.selectedCategory != category) {
-      emit(state.copyWith(
-        selectedCategory: category,
-        currentPage: 1,
-        products: [],
-        hasMoreProducts: true,
-        errorMessage: null,
-      ));
+      emit(
+        state.copyWith(
+          selectedCategory: category,
+          currentPage: 1,
+          products: [],
+          hasMoreProducts: true,
+          errorMessage: null,
+        ),
+      );
       await fetchProducts();
     }
   }
 
   void refreshCategories() {
     fetchCategories(forceRefresh: true);
-  }
-
-  Future<void> refreshProducts() async {
-    await fetchProducts(forceRefresh: true);
   }
 
   Future<void> refreshAll() async {

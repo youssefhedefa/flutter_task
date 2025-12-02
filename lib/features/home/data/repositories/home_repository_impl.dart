@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter_task/core/constants/app_strings.dart';
 import 'package:flutter_task/core/networking/remote/api_result.dart';
 import 'package:flutter_task/core/networking/remote/cached_data.dart';
@@ -14,53 +12,94 @@ class HomeRepositoryImpl extends BaseRepository implements HomeRepository {
   final HomeRemoteDataSource _remoteDataSource;
   final HomeLocalDataSource _localDataSource;
 
+  bool _firstTimeToFetchCategories = true;
+
+  final Map<String, bool> _firstTimeToFetchProducts = {};
+
   HomeRepositoryImpl({
     required HomeRemoteDataSource remoteDataSource,
     required HomeLocalDataSource localDataSource,
-  })  : _remoteDataSource = remoteDataSource,
-        _localDataSource = localDataSource;
+  }) : _remoteDataSource = remoteDataSource,
+       _localDataSource = localDataSource;
 
   @override
   Future<ApiResult<CachedData<List<CategoryEntity>>>> getCategories({
     bool forceRefresh = false,
   }) async {
-
-    // First time OR force refresh → load from API
-    if (forceRefresh) {
-      final apiResult = await executeApiCall(() async {
-        final data = await _remoteDataSource.getCategories();
-        return Success(data);
-      });
+    if (_firstTimeToFetchCategories) {
+      _firstTimeToFetchCategories = false;
+      final apiResult = await _fetchAndCacheCategories();
 
       if (apiResult is Success<List<CategoryEntity>>) {
-        await _localDataSource.saveCategories(apiResult.data);
-        return Success(CachedData(data: apiResult.data, isFromCache: false));
+        return Success(
+          CachedData(
+            data: apiResult.data,
+            isFromCache: false,
+          ),
+        );
       }
 
-      // API failed, try cache as fallback
-      final cachedFallback = await _localDataSource.getCachedCategories();
-      if (cachedFallback != null && cachedFallback.isNotEmpty) {
-        return Success(CachedData(data: cachedFallback, isFromCache: true));
-      }
-
-      return Failure((apiResult as Failure).exception);
+      return await _fallbackCategories(apiResult);
     }
 
-    // Not first time and not force refresh → load from cache
+    if (forceRefresh) {
+      final apiResult = await _fetchAndCacheCategories();
+
+      if (apiResult is Success<List<CategoryEntity>>) {
+        return Success(
+          CachedData(
+            data: apiResult.data,
+            isFromCache: false,
+          ),
+        );
+      }
+
+      return await _fallbackCategories(apiResult);
+    }
+
     final cached = await _localDataSource.getCachedCategories();
     if (cached != null && cached.isNotEmpty) {
-      return Success(CachedData(data: cached, isFromCache: true));
+      return Success(
+        CachedData(
+          data: cached,
+          isFromCache: true,
+        ),
+      );
     }
 
-    // Cache miss, fetch from API
-    final apiResult = await executeApiCall(() async {
-      final data = await _remoteDataSource.getCategories();
-      return Success(data);
-    });
-
+    final apiResult = await _fetchAndCacheCategories();
     if (apiResult is Success<List<CategoryEntity>>) {
-      await _localDataSource.saveCategories(apiResult.data);
-      return Success(CachedData(data: apiResult.data, isFromCache: false));
+      return Success(
+        CachedData(
+          data: apiResult.data,
+          isFromCache: false,
+        ),
+      );
+    }
+
+    return Failure((apiResult as Failure).exception);
+  }
+
+  Future<ApiResult<List<CategoryEntity>>> _fetchAndCacheCategories() async {
+    return await executeApiCall(() async {
+      final remote = await _remoteDataSource.getCategories();
+      await _localDataSource.saveCategories(remote);
+      return Success(remote);
+    });
+  }
+
+  Future<ApiResult<CachedData<List<CategoryEntity>>>> _fallbackCategories(
+    ApiResult apiResult,
+  ) async {
+    final fallback = await _localDataSource.getCachedCategories();
+
+    if (fallback != null && fallback.isNotEmpty) {
+      return Success(
+        CachedData(
+          data: fallback,
+          isFromCache: true,
+        ),
+      );
     }
 
     return Failure((apiResult as Failure).exception);
@@ -73,93 +112,92 @@ class HomeRepositoryImpl extends BaseRepository implements HomeRepository {
     int? skip,
     bool forceRefresh = false,
   }) async {
-    final categoryKey = category ?? AppStrings.all;
+    final String categoryKey = category ?? AppStrings.all;
+    if (_firstTimeToFetchProducts[categoryKey] != false) {
+      _firstTimeToFetchProducts[categoryKey] = false;
 
-    log('Fetching products for "$categoryKey": forceRefresh=$forceRefresh, limit=$limit, skip=$skip');
+      final apiResult = await _fetchAndCacheProducts(categoryKey, category);
 
-    // First time for this category OR force refresh → load from API
-    if (forceRefresh) {
-      final apiResult = await executeApiCall(() async {
-        final products = await _remoteDataSource.getProducts(category: category);
-
-        // Save to cache
-        await _localDataSource.saveProducts(categoryKey, products);
-        return Success(_paginate(products, limit, skip));
-      });
-
-      // If API call succeeds, return the result
       if (apiResult is Success<List<ProductEntity>>) {
-        return apiResult;
+        return Success(_paginate(apiResult.data, limit, skip));
       }
 
-      // API failed, try cache as fallback
-      log('API failed for "$categoryKey", falling back to cache');
-      final cachedFallback = await _localDataSource.getCachedProducts(categoryKey);
-      if (cachedFallback != null && cachedFallback.isNotEmpty) {
-        log('Returning cached fallback for "$categoryKey"');
-        return Success(_paginate(cachedFallback, limit, skip));
+      return await _fallbackProducts(
+        apiResult,
+        categoryKey,
+        limit,
+        skip,
+      );
+    }
+    if (forceRefresh) {
+      final apiResult = await _fetchAndCacheProducts(categoryKey, category);
+
+      if (apiResult is Success<List<ProductEntity>>) {
+        return Success(_paginate(apiResult.data, limit, skip));
       }
 
-      // No cache available, return the API error
-      return apiResult;
+      return await _fallbackProducts(
+        apiResult,
+        categoryKey,
+        limit,
+        skip,
+      );
     }
 
-    // Not first time and not force refresh → load from cache
     final cached = await _localDataSource.getCachedProducts(categoryKey);
     if (cached != null && cached.isNotEmpty) {
-      log('Returning products from cache for "$categoryKey"');
       return Success(_paginate(cached, limit, skip));
     }
 
-    // Cache miss, fetch from API
-    log('Cache miss for "$categoryKey", fetching from API');
-    final apiResult = await executeApiCall(() async {
-      final products = await _remoteDataSource.getProducts(category: category);
-
-      // Save to cache
-      await _localDataSource.saveProducts(categoryKey, products);
-
-      return Success(_paginate(products, limit, skip));
-    });
-
-    // If API call succeeds, return the result
+    final apiResult = await _fetchAndCacheProducts(categoryKey, category);
     if (apiResult is Success<List<ProductEntity>>) {
-      return apiResult;
+      return Success(_paginate(apiResult.data, limit, skip));
     }
 
-    // API failed and no cache available, return error
     return apiResult;
   }
 
-  /// Paginate a list of products
-  /// [list] - The full list of products
-  /// [limit] - Maximum number of items to return
-  /// [skip] - Number of items to skip from the start
+  Future<ApiResult<List<ProductEntity>>> _fetchAndCacheProducts(
+    String categoryKey,
+    String? category,
+  ) async {
+    return await executeApiCall(() async {
+      final remote = await _remoteDataSource.getProducts(category: category);
+
+      await _localDataSource.saveProducts(categoryKey, remote);
+
+      return Success(remote);
+    });
+  }
+
+  Future<ApiResult<List<ProductEntity>>> _fallbackProducts(
+    ApiResult apiResult,
+    String categoryKey,
+    int? limit,
+    int? skip,
+  ) async {
+    final fallback = await _localDataSource.getCachedProducts(categoryKey);
+
+    if (fallback != null && fallback.isNotEmpty) {
+      return Success(_paginate(fallback, limit, skip));
+    }
+
+    return Failure((apiResult as Failure).exception);
+  }
+
   List<ProductEntity> _paginate(
     List<ProductEntity> list,
     int? limit,
     int? skip,
   ) {
-    final skipCount = skip ?? 0;
+    final int s = skip ?? 0;
 
-    log('Paginating: total=${list.length}, skip=$skipCount, limit=$limit');
+    if (s >= list.length) return [];
 
-    // If skip is beyond list length, return empty list
-    if (skipCount >= list.length) {
-      log('Skip beyond list length, returning empty');
-      return [];
-    }
-
-    // Skip items and take up to limit
     if (limit != null) {
-      final result = list.skip(skipCount).take(limit).toList();
-      log('Returning ${result.length} items (limit applied)');
-      return result;
+      return list.skip(s).take(limit).toList();
     }
 
-    // No limit, return all remaining items
-    final result = list.skip(skipCount).toList();
-    log('Returning ${result.length} items (no limit)');
-    return result;
+    return list.skip(s).toList();
   }
 }

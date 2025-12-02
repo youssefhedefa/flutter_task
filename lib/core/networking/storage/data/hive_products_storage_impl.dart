@@ -1,8 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import '../domain/products_local_storage.dart';
 
-/// Hive implementation of ProductsLocalStorage
-/// Data layer - contains framework-specific implementation details
 class HiveProductsStorageImpl implements ProductsLocalStorage {
   static const String _boxName = 'products_box';
 
@@ -62,13 +60,10 @@ class HiveProductsStorageImpl implements ProductsLocalStorage {
 
     return allProducts;
   }
-
-  /// Helper method to convert Map<dynamic, dynamic> to Map<String, dynamic>
   Map<String, dynamic> _convertMap(Map<dynamic, dynamic> map) {
     final result = <String, dynamic>{};
     map.forEach((key, value) {
       if (value is Map<dynamic, dynamic>) {
-        // Recursively convert nested maps
         result[key.toString()] = _convertMap(value);
       } else {
         result[key.toString()] = value;
@@ -88,7 +83,14 @@ class HiveProductsStorageImpl implements ProductsLocalStorage {
     final box = await _getBox();
     final data = box.get(key);
     if (data != null && data is List) {
-      return data.cast<Map<String, dynamic>>();
+      return data.map((item) {
+        if (item is Map<dynamic, dynamic>) {
+          return _convertMap(item);
+        } else if (item is Map<String, dynamic>) {
+          return item;
+        }
+        throw Exception('Invalid data type in cache: ${item.runtimeType}');
+      }).toList();
     }
     return null;
   }

@@ -15,8 +15,8 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
 
   SearchBloc({
     required SearchProductsUseCase searchProductsUseCase,
-  })  : _searchProductsUseCase = searchProductsUseCase,
-        super(const SearchState()) {
+  }) : _searchProductsUseCase = searchProductsUseCase,
+       super(const SearchState()) {
     on<SearchQueryChanged>(
       _onSearchQueryChanged,
       transformer: debounceTransformer(_debounceDuration),
@@ -31,35 +31,43 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     final query = event.query.trim();
 
     if (query.isEmpty) {
-      emit(state.copyWith(
-        status: RequestStatusEnum.initial,
-        products: [],
-        query: query,
-      ));
+      emit(
+        state.copyWith(
+          status: RequestStatusEnum.initial,
+          products: [],
+          query: query,
+        ),
+      );
       return;
     }
 
-    emit(state.copyWith(
-      status: RequestStatusEnum.loading,
-      query: query,
-    ));
+    emit(
+      state.copyWith(
+        status: RequestStatusEnum.loading,
+        query: query,
+      ),
+    );
 
     final result = await _searchProductsUseCase.execute(query);
 
     result.when(
       success: (products) {
-        emit(state.copyWith(
-          status: RequestStatusEnum.success,
-          products: products,
-          errorMessage: null,
-        ));
+        emit(
+          state.copyWith(
+            status: RequestStatusEnum.success,
+            products: products,
+            errorMessage: null,
+          ),
+        );
       },
       failure: (error) {
-        emit(state.copyWith(
-          status: RequestStatusEnum.failure,
-          errorMessage: error.message,
-          products: [],
-        ));
+        emit(
+          state.copyWith(
+            status: RequestStatusEnum.failure,
+            errorMessage: error.message,
+            products: [],
+          ),
+        );
       },
     );
   }
@@ -71,4 +79,3 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     emit(const SearchState());
   }
 }
-

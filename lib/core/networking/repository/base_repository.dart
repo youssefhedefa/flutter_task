@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter_task/core/networking/exceptions/api_exception_handler.dart';
 import 'package:flutter_task/core/networking/remote/api_result.dart';
 
@@ -10,7 +8,7 @@ class BaseRepository {
     try {
       return await apiCall();
     } catch (e) {
-      log('Error in BaseRepository: $e');
+
       return Failure(ApiExceptionHandler.handleException(e));
     }
   }

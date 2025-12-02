@@ -31,6 +31,7 @@ import 'package:flutter_task/features/search/domain/usecases/search_products_use
 import 'package:flutter_task/features/search/presentation/bloc/search_bloc.dart';
 import 'package:flutter_task/features/splash/domain/usecases/check_auth_usecase.dart';
 import 'package:flutter_task/features/splash/presentation/cubit/splash_cubit.dart';
+import 'package:flutter_task/features/wishlist/data/datasources/wishlist_local_data_source.dart';
 import 'package:flutter_task/features/wishlist/data/repositories/wishlist_repository_impl.dart';
 import 'package:flutter_task/features/wishlist/domain/repositories/wishlist_repository.dart';
 import 'package:flutter_task/features/wishlist/domain/usecases/check_product_in_wishlist_usecase.dart';
@@ -74,129 +75,132 @@ initServiceLocator() {
   // Auth Repository
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
-      apiService: getIt(),
-      secureStorageService: getIt(),
+      apiService: getIt<ApiService>(),
+      secureStorageService: getIt<SecureStorageService>(),
     ),
   );
 
   // Auth Use Cases
   getIt.registerLazySingleton<LoginUseCase>(
-    () => LoginUseCase(authRepository: getIt()),
+    () => LoginUseCase(authRepository: getIt<AuthRepository>()),
   );
 
   // Auth Cubit
   getIt.registerFactory<LoginCubit>(
     () => LoginCubit(
-      loginUseCase: getIt(),
+      loginUseCase: getIt<LoginUseCase>(),
     ),
   );
 
   // Splash Use Cases
   getIt.registerLazySingleton<CheckAuthUseCase>(
-    () => CheckAuthUseCase(secureStorageService: getIt()),
+    () => CheckAuthUseCase(secureStorageService: getIt<SecureStorageService>()),
   );
 
   // Splash Cubit
   getIt.registerFactory<SplashCubit>(
     () => SplashCubit(
-      checkAuthUseCase: getIt(),
+      checkAuthUseCase: getIt<CheckAuthUseCase>(),
     ),
   );
 
   // Home Data Sources
   getIt.registerLazySingleton<HomeRemoteDataSource>(
-    () => HomeRemoteDataSourceImpl(apiService: getIt()),
+    () => HomeRemoteDataSourceImpl(apiService: getIt<ApiService>()),
   );
 
   getIt.registerLazySingleton<HomeLocalDataSource>(
     () => HomeLocalDataSourceImpl(
-      categoriesStorage: getIt(),
-      productsStorage: getIt(),
+      categoriesStorage: getIt<CategoriesLocalStorage>(),
+      productsStorage: getIt<ProductsLocalStorage>(),
     ),
   );
 
   // Home Repository
   getIt.registerLazySingleton<HomeRepository>(
     () => HomeRepositoryImpl(
-      remoteDataSource: getIt(),
-      localDataSource: getIt(),
+      remoteDataSource: getIt<HomeRemoteDataSource>(),
+      localDataSource: getIt<HomeLocalDataSource>(),
     ),
   );
 
   // Home Use Cases
   getIt.registerLazySingleton<GetCategoriesUseCase>(
-    () => GetCategoriesUseCase(repository: getIt()),
+    () => GetCategoriesUseCase(repository: getIt<HomeRepository>()),
   );
 
   getIt.registerLazySingleton<GetProductsUseCase>(
-    () => GetProductsUseCase(repository: getIt()),
+    () => GetProductsUseCase(repository: getIt<HomeRepository>()),
   );
 
   // Home Cubit
   getIt.registerFactory<HomeCubit>(
     () => HomeCubit(
-      getCategoriesUseCase: getIt(),
-      getProductsUseCase: getIt(),
+      getCategoriesUseCase: getIt<GetCategoriesUseCase>(),
+      getProductsUseCase: getIt<GetProductsUseCase>(),
     ),
   );
 
-  // Product Details Data Sources
   getIt.registerLazySingleton<ProductDetailsRemoteDataSource>(
-    () => ProductDetailsRemoteDataSourceImpl(apiService: getIt()),
+    () => ProductDetailsRemoteDataSourceImpl(apiService: getIt<ApiService>()),
   );
 
-  // Product Details Repository
   getIt.registerLazySingleton<ProductDetailsRepository>(
     () => ProductDetailsRepositoryImpl(
-      remoteDataSource: getIt(),
+      remoteDataSource: getIt<ProductDetailsRemoteDataSource>(),
     ),
   );
 
-  // Product Details Use Cases
   getIt.registerLazySingleton<GetProductDetailsUseCase>(
-    () => GetProductDetailsUseCase(repository: getIt()),
+    () => GetProductDetailsUseCase(repository: getIt<ProductDetailsRepository>()),
   );
 
-  // Product Details Cubit
   getIt.registerFactory<ProductDetailsCubit>(
     () => ProductDetailsCubit(
-      getProductDetailsUseCase: getIt(),
-      toggleWishlistUseCase: getIt(),
-      checkProductInWishlistUseCase: getIt(),
-      getWishlistIdsUseCase: getIt(),
+      getProductDetailsUseCase: getIt<GetProductDetailsUseCase>(),
+      toggleWishlistUseCase: getIt<ToggleWishlistUseCase>(),
+      checkProductInWishlistUseCase: getIt<CheckProductInWishlistUseCase>(),
+      getWishlistIdsUseCase: getIt<GetWishlistIdsUseCase>(),
     ),
   );
 
   // Search Data Sources
   getIt.registerLazySingleton<SearchLocalDataSource>(
     () => SearchLocalDataSourceImpl(
-      productsStorage: getIt(),
+      productsStorage: getIt<ProductsLocalStorage>(),
     ),
   );
 
   // Search Repository
   getIt.registerLazySingleton<SearchRepository>(
     () => SearchRepositoryImpl(
-      localDataSource: getIt(),
+      localDataSource: getIt<SearchLocalDataSource>(),
     ),
   );
 
   // Search Use Cases
   getIt.registerLazySingleton<SearchProductsUseCase>(
-    () => SearchProductsUseCase(repository: getIt()),
+    () => SearchProductsUseCase(repository: getIt<SearchRepository>()),
   );
 
   // Search Bloc
   getIt.registerFactory<SearchBloc>(
     () => SearchBloc(
-      searchProductsUseCase: getIt(),
+      searchProductsUseCase: getIt<SearchProductsUseCase>(),
+    ),
+  );
+
+  // Wishlist Data Source
+  getIt.registerLazySingleton<WishlistLocalDataSource>(
+    () => WishlistLocalDataSourceImpl(
+      wishlistStorage: getIt<WishlistLocalStorage>(),
     ),
   );
 
   // Wishlist Repository
   getIt.registerLazySingleton<WishlistRepositoryImpl>(
     () => WishlistRepositoryImpl(
-      wishlistStorage: getIt(),
+      localDataSource: getIt<WishlistLocalDataSource>(),
     ),
   );
 
@@ -204,17 +208,16 @@ initServiceLocator() {
     () => getIt<WishlistRepositoryImpl>(),
   );
 
-  // Wishlist Use Cases
   getIt.registerLazySingleton<GetWishlistProductsUseCase>(
-    () => GetWishlistProductsUseCase(repository: getIt()),
+    () => GetWishlistProductsUseCase(repository: getIt<WishlistRepository>()),
   );
 
   getIt.registerLazySingleton<ToggleWishlistUseCase>(
-    () => ToggleWishlistUseCase(repository: getIt()),
+    () => ToggleWishlistUseCase(repository: getIt<WishlistRepository>()),
   );
 
   getIt.registerLazySingleton<GetWishlistIdsUseCase>(
-    () => GetWishlistIdsUseCase(repository: getIt()),
+    () => GetWishlistIdsUseCase(repository: getIt<WishlistRepository>()),
   );
 
   getIt.registerLazySingleton<ConvertProductToJsonUseCase>(
@@ -229,15 +232,14 @@ initServiceLocator() {
     () => CheckProductInWishlistUseCase(),
   );
 
-  // Main Navigation Cubit (combines bottom nav and wishlist management)
   getIt.registerFactory<MainNavigationCubit>(
     () => MainNavigationCubit(
-      getWishlistIdsUseCase: getIt(),
-      getWishlistProductsUseCase: getIt(),
-      toggleWishlistUseCase: getIt(),
-      convertProductToJsonUseCase: getIt(),
-      updateWishlistIdsUseCase: getIt(),
-      checkProductInWishlistUseCase: getIt(),
+      getWishlistIdsUseCase: getIt<GetWishlistIdsUseCase>(),
+      getWishlistProductsUseCase: getIt<GetWishlistProductsUseCase>(),
+      toggleWishlistUseCase: getIt<ToggleWishlistUseCase>(),
+      convertProductToJsonUseCase: getIt<ConvertProductToJsonUseCase>(),
+      updateWishlistIdsUseCase: getIt<UpdateWishlistIdsUseCase>(),
+      checkProductInWishlistUseCase: getIt<CheckProductInWishlistUseCase>(),
     ),
   );
 }

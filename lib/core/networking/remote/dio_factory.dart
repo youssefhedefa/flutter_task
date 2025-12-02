@@ -23,7 +23,6 @@ class DioFactory {
         },
         responseType: ResponseType.json,
         validateStatus: (status) {
-          // Accept any status code
           return status != null && status < 500;
         },
       ),

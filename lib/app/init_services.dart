@@ -21,6 +21,7 @@ class IniServices {
     await HiveService.init();
     initServiceLocator();
   }
+
   void makeStatusBarTransparent() {
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(statusBarColor: Colors.transparent),

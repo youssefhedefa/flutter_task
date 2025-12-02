@@ -1,9 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import '../domain/base_secure_storage.dart';
 
-/// Basic Hive implementation of secure storage (without encryption)
-/// Data layer - contains framework-specific implementation details
-/// For production with sensitive data, consider using HiveEncryptedSecureStorageImpl
 class HiveSecureStorageImpl implements BaseSecureStorage {
   static const String _boxName = 'secure_storage_box';
   static const String _tokenKey = 'auth_token';
@@ -16,7 +13,6 @@ class HiveSecureStorageImpl implements BaseSecureStorage {
     }
 
     if (!Hive.isBoxOpen(_boxName)) {
-      // Open box without encryption
       _box = await Hive.openBox<String>(_boxName);
     } else {
       _box = Hive.box<String>(_boxName);

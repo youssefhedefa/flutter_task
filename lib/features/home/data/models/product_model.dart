@@ -1,3 +1,5 @@
+import 'package:flutter_task/features/home/data/models/rating_model.dart';
+
 class ProductModel {
   final int id;
   final String title;
@@ -22,10 +24,10 @@ class ProductModel {
       id: json['id'] as int,
       title: json['title'] as String,
       price: (json['price'] as num).toDouble(),
-      description: json['description'] as String,
+      description: (json['description'] as String?) ?? '',
       category: json['category'] as String,
       image: json['image'] as String,
-      rating: RatingModel.fromJson(json['rating'] as Map<String, dynamic>),
+      rating: RatingModel.fromJson(Map<String, dynamic>.from(json['rating'] as Map)),
     );
   }
 
@@ -42,27 +44,4 @@ class ProductModel {
   }
 }
 
-class RatingModel {
-  final double rate;
-  final int count;
-
-  const RatingModel({
-    required this.rate,
-    required this.count,
-  });
-
-  factory RatingModel.fromJson(Map<String, dynamic> json) {
-    return RatingModel(
-      rate: (json['rate'] as num).toDouble(),
-      count: json['count'] as int,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'rate': rate,
-      'count': count,
-    };
-  }
-}
 

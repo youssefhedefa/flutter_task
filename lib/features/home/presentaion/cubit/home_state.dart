@@ -18,7 +18,7 @@ class HomeState extends Equatable {
   // Pagination
   final bool hasMoreProducts;
   final int currentPage;
-  static const int productsPerPage = 8;
+  final int productsPerPage = 8;
 
   const HomeState({
     this.categoryStatus = RequestStatusEnum.initial,

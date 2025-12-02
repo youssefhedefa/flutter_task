@@ -1,6 +1,6 @@
 import 'dart:developer';
-
-import 'package:flutter_task/core/networking/storage/domain/products_local_storage.dart';import 'package:flutter_task/features/home/data/mappers/product_mapper.dart';
+import 'package:flutter_task/core/networking/storage/domain/products_local_storage.dart';
+import 'package:flutter_task/features/home/data/mappers/product_mapper.dart';
 import 'package:flutter_task/features/home/domain/entities/product_entity.dart';
 
 abstract class SearchLocalDataSource {
@@ -25,7 +25,6 @@ class SearchLocalDataSourceImpl implements SearchLocalDataSource {
 
       final searchQuery = query.toLowerCase().trim();
 
-      // Filter products based on title or category
       final filteredProducts = allProducts.where((productJson) {
         final title = (productJson['title'] as String?)?.toLowerCase() ?? '';
         final category = (productJson['category'] as String?)?.toLowerCase() ?? '';
@@ -33,11 +32,9 @@ class SearchLocalDataSourceImpl implements SearchLocalDataSource {
         return title.contains(searchQuery) || category.contains(searchQuery);
       }).toList();
 
-      // Remove duplicates by id
       final uniqueProducts = <int, Map<String, dynamic>>{};
       for (var product in filteredProducts) {
         final id = product['id'] as int;
-        // Ensure description field exists (cached products might not have it)
         if (!product.containsKey('description') || product['description'] == null) {
           product['description'] = '';
         }

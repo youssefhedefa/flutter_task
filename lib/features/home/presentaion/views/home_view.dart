@@ -24,6 +24,9 @@ class HomeView extends StatelessWidget {
           homeCubit.updateWishlistIds(navigationState.wishlistIds);
         },
         child: BlocListener<HomeCubit, HomeState>(
+          listenWhen: (previous, current) =>
+              previous.isFromCache != current.isFromCache ||
+              previous.errorMessage != current.errorMessage,
           listener: (context, state) {
             if (_showLocalAlerts(state)) {
               context.showAlertSnackBar(
