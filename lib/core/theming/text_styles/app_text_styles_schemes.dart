@@ -18,10 +18,10 @@ abstract class AppTextStylesSchemes {
       color: _lightColors.thirdColor,
     ),
 
-    font14MediumSecondaryTextColor: TextStyle(
+    font14MediumThirdColor: TextStyle(
       fontSize: 14,
       fontWeight: FontWeight.w500,
-      color: _lightColors.secondaryTextColor,
+      color: _lightColors.thirdColor,
     ),
 
     font14MediumButtonText: TextStyle(

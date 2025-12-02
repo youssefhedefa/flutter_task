@@ -9,11 +9,12 @@ class FlutterTaskApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Task',
       theme: AppTheme().lightTheme,
       darkTheme: AppTheme().darkTheme,
       onGenerateRoute: AppRoutingManager().onGenerateRoute,
-      initialRoute: AppRoutingConstants.home,
+      initialRoute: AppRoutingConstants.splash,
     );
   }
 }

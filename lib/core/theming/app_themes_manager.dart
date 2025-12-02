@@ -16,8 +16,16 @@ class AppTheme {
     return ThemeData(
       brightness: Brightness.light,
       scaffoldBackgroundColor: lightColors.backgroundColor,
+      primaryColor: lightColors.primaryColor,
       textTheme: ThemeData.light().textTheme.apply(
         bodyColor: lightColors.secondaryColor,
+      ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: lightColors.backgroundColor,
+        surfaceTintColor: Colors.transparent,
+      ),
+      iconTheme: IconThemeData(
+        color: lightColors.primaryColor,
       ),
       extensions: <ThemeExtension<dynamic>>[
         lightColors,
